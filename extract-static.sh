@@ -13,6 +13,6 @@ echo "
 #include <notcurses/notcurses.h>
 " > preamble
 
-raku -Iscripts create-exports.raku
+raku -Iscripts-copy create-exports.raku
 
 

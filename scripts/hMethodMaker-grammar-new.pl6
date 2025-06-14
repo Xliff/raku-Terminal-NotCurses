@@ -1,17 +1,15 @@
 #!/usr/bin/env perl6
 use v6.c;
 
-#use Data::Dump::Tree;
+use Data::Dump::Tree;
+use P5quotemeta;
 use IO::Capture::Simple;
 
-use lib <.>;
+use lib <. scripts>;
 
-use ScriptConfig;
 use GTKScripts;
 
 my %do_output;
-
-use Grammar::Tracer;
 
 grammar C-Function-Def {
   regex TOP { <top-bland> }
@@ -32,54 +30,76 @@ grammar C-Function-Def {
       'G_GNUC_WARN_UNUSED_RESULT'                            |
       'G_GNUC_INTERNAL'                                      |
       <[A..Z]>+ '_DEPRECATED' [ '_IN_' (\d+)+ % '_' ]?
-      '_FOR' \s* '(' (<-[)]>+) ')'
+      '_FOR' \s* '(' <[\w _]>+ ')'
   }
 
-  rule parameters {
-      '(void)'
-    |
-      '(' [ <type> <var>? '[]'? ]+ % [ \s* ',' \s* ] [','? $<va>='...' ]? ')'
-  }
+  # rule parameters {
+  #     '(void)'
+  #   |
+  #     '(' [ <type> <var>? ]+ % [ \s* ',' \s* ] [','? $<va>='...' ]? ')'
+  # }
 
-  # cw: Double semi-colon sometimes occurs during processing, so it is acccounted
-  # for, here.
-  token func_name { <[ \w+ _ ]>+ }
-  rule func_def {
-      <returns>
-    $<sub>=[
-      <func_name>
-      |
-      '(*' <func_name> ')'
-    ]
-      <parameters>
-    [ <postdec>+ % \s* ]?';'';'?
-  }
+  # rule true-func-def {
+  #   $<sub>=[ \w+ ]
+  #     <parameters>
+  # }
 
-  regex       p { [ '*' [ \s* 'const' <!before '_'> \s* ]? ]+ }
-  token       n { 'const '? <[\w _]>+ }
-  token       t { <n> | '(' <p> <n>? ')' \s* <parameters> }
-  token     mod { 'extern' | 'long' | 'const' | 'struct' | 'enum' }
-  rule     type { 'unsigned' <p>? | [ <mod>+ %% \s ]? <n>? <p>? }
-  rule      var { <t> [ '[' (.+?)? ']' ]? }
-  token returns { [ <mod>+ %% \s]? <.ws> <t> \s* <p>? }
-  token postdec { (<[A..Z0..9]>+)+ %% '_' \s* [ '(' .+? ')' ]? }
-  token      ad { 'AVAILABLE' | 'DEPRECATED' }
+  # rule static-inline-func {
+  #   ^^ 'static' 'inline' <func_block>
+  # }
+  #
+  # rule func_block {
+  #   <func_def_common>\s*<nested-braces>
+  # }
+  #
+  # rule func_def {
+  #   <func_def_common>
+  #   [ <postdec>+ % \s* ]?';'+
+  # }
+  #
+  # rule func_def_common> {
+  #   'extern'?
+  #     <returns>
+  #   [
+  #       $<fd>=<true-func-def>
+  #     |
+  #       $<fd>=[ '(*' <true-func-def> ')' ]
+  #       <parameters>
+  #   ]
+  # }
+
+  # regex       p { [ '*' [ \s* 'const' <!before '_'> \s* ]? ]+ }
+  # token       n { <[\w _]>+ }
+  # token       t { <n> | '(' <p> <n>? ')' \s* <parameters> }
+  # #token     mod { 'extern' | 'unsigned' | 'long' | 'const' | 'struct' | 'enum' }
+  # token     mod { 'extern' | 'unsigned' | 'const' | 'struct' | 'enum' }
+  # rule     type { [ <mod>+ %% \s ]?
+  #                 $<name>=[
+  #                     <n>\s*$<a>='[' (\d+) ']'
+  #                   |
+  #                     <n> <p>?
+  #                 ]?
+  #               }
+  # token     var { <t> }
+  # token returns { [ <mod>+ %% \s]? <.ws> <t> \s* <p>? }
+  # token postdec { (<[A..Z0..9]>+)+ %% '_' \s* [ '(' .+? ')' ]? }
+  # token      ad { 'AVAILABLE' | 'DEPRECATED' }
 
   token availability {
-    [
-      ( <[A..Z]>+'_' )+?
-      <ad> [
-      '_'
-      ( <[A..Z]>+ )+ %% '_'
       [
-      'ALL'
+        ( <[A..Z]>+'_' )+?
+        <ad> [
+        '_'
+        ( <[A..Z]>+ )+ %% '_'
+        [
+        'ALL'
       |
-      <[0..9]>+ %% '_'
+        <[0..9]>+ %% '_'
+        ]
+        ]?
+      |
+        <[A..Z]>+'_API'
       ]
-      ]?
-      |
-      <[A..Z]>+'_API'
-    ]
   }
 
 }
@@ -89,7 +109,7 @@ grammar C-Function-Internal-Def is C-Function-Def {
 }
 
 # Reuse?? Why the need to redefine this when I have it in the grammar?
-#my token ad { 'AVAILABLE' | 'DEPRECATED' }
+my token ad { 'AVAILABLE' | 'DEPRECATED' }
 my token availability {
   [
       ( <[A..Z]>+'_' )+?
@@ -104,7 +124,6 @@ my token availability {
 
 sub MAIN (
         $filename,                     #= Filename to process
-       :$files,                        #= Send output to files
   Str  :$remove,                       #= Prefix to remove from method names
   Str  :$var,                          #= Class variable name [defaults to '$!w']. If not specified class methods will be generated.
   Str  :$output-only,                  #= Only output methods and attributes matching the given pattern. Pattern should be placed in quotes.
@@ -113,22 +132,21 @@ sub MAIN (
   Int  :$trim-end,                     #= Trim lines from the end of the post-processed file
   Str  :$remove-from-start  is copy,   #= Remove colon separated prefix strings from all lines
   Str  :$remove-from-end    is copy,   #= Remove colon separate suffix strings from all lines
-  Str  :$lib                is copy,   #= Library name to use
-       :$delete             =  '',      #= Comma separated list of lines to delete
+  Str  :$delete,                       #= Comma separated list of lines to delete
+  Int  :$debug              =      0,  #= Set debug level
   Str  :$output             =  'all',  #= Type of output: 'methods', 'attributes', 'subs' or 'all'
-  Bool :$extreme            =  False,  #= Use extreme cleanup methods
+  Str  :$lib                =  'gtk',  #= Library name to use
   Bool :$internal           =  False,  #= Add checking for INTERNAL methods
-  Bool :$bland              =  True,   #= Do NOT attempt to process preprocessor prefixes to subroutines
+  Bool :$bland              =  False,  #= Do NOT attempt to process preprocessor prefixes to subroutines
   Bool :$get-set            =  False,  #= Convert simple get/set routine to "attribute" code.
   Bool :$raw-methods        =  False,  #= Use method format for raw invocations (NFYI)
   Bool :x11(:$X11)          =  False   #= Use GUI mode (must have a valid DISPLAY)
 ) {
-
   parse-file($CONFIG-NAME);
 
   # Get specific option values from configuration file, if it exists,
   # and those keys are defined.
-  if %config<hfile-prefix> -> $pre is copy {
+  if %config<hfile-prefix> -> $pre {
     $remove-from-start ~= ':' if $remove-from-start;
     $remove-from-start ~= $pre;
     #$*ERR.say: "<hfile-perfix> = { $pre }";
@@ -142,8 +160,7 @@ sub MAIN (
 
   my $fn = $filename;
 
-  $fn = "{ %config<include-directory> // '/usr/include/gtk-3.0/gtk' }/$fn"
-    unless $fn.starts-with('/');
+  $fn = "/usr/include/gtk-3.0/gtk/$fn" unless $fn.starts-with('/');
   die "Cannot find '$fn'\n" unless $fn.IO.e;
 
   if $internal.not {
@@ -171,82 +188,21 @@ sub MAIN (
   my @detected;
   my $contents = $fn.IO.open.slurp-rest;
 
-  my ($out-file, $out-raw-file, $item);
-  $lib //= %config<library> // %config<lib>;
-  if $files {
-    $item     = $filename.split('.').head.split('-').tail.tc;
-    $lib      = $item.split('/').head.lc.subst(/ ^ 'lib'/, '') unless $lib;
-    $out-file = $item.subst('/', '-', :g)  ~ '.pm6';
-
-    use File::Find;
-
-    my $head      = find( dir => 'lib', type => 'dir', name => 'Raw' ).head;
-    $out-raw-file = $head.add($out-file).open(:w);
-    $out-file     = $head.parent.add($out-file).open(:w);
-  }
-  $lib = 'gtk' unless $lib;
-
-  # cw: Remove all struct definitions;
-  $contents ~~ m:g/<struct>/;
-  if $/ {
-    for $/[].reverse {
-      given .<struct> {
-        #say "Removing { .from } to { .to }...";
-        $contents.substr-rw( .from, .to - .from ) = ''
-      }
-    }
-  }
-
-  my token nested-parens {
-    '(' ~ ')' [
-      || <- [()] >+
-      || <.before '('> <~~>
-    ]*
-  }
-
-  my token mname { <[A..Za..z0..9_]>+ }
-  my token decl  { (<[A..Z]>+)+ %% '_' <nested-parens>? }
-  my token args  { '(' <-[)]>+ ')' }
-
   # Remove extraneous, non-necessary bits!
-  # Comments
-
-  $contents ~~ s:g/ '\\' $$ \s+ .+? $$ //;
-
-  $contents ~~
-    s:g/
-      ^^ '#define'    <.ws>
-      <decl> <args>?  <.ws>
-      <mname>?        <.ws>
-      <nested-parens>
-    //;
-
-  $contents ~~ s:g/
-    '__attribute''__'?\s*'((' [
-      'nonnull'\s*'('<-[)]>+')' |
-      'warn_unused_result'      |
-      'format'\s*'('<-[)]>+')'
-    ]
-    '))'
-  //;
-  $contents ~~ s:g/ ^^ <.ws>? '//' .+? $$                                    //;
-  $contents ~~ s:g/ ^^ '#define' <.ws> <decl> <.ws>  .+? $$                  //;
-  $contents ~~ s:g/ ^^ '#' .+? $$                                            //;
-  $contents ~~ s:g/ <[A..Z]>+ [ '_BEGIN_DECLS' || '_END_DECLS' ]             //;
-  $contents ~~ s:g/ '/*' ~ '*/' (.+?)                                        //;
-  $contents ~~ s:g/ 'G_STMT_START'  .+? 'G_STMT_END'                         //;
-  # Multi line defines;
-
-  $contents ~~ s:g/ 'const ' //;
+  $contents ~~ s:g/ '/*' ~ '*/' (.+?)//; # Comments
+  $contents ~~ s:g/ 'G_STMT_START {' .+? '} G_STMT_END'//;
+  $contents ~~ s:g/ '\\' $$ \s+ .+? $$//;  # Multi line defines;
+  $contents ~~ s:g/ ^^ \s* '#' .+? $$//;
+  $contents ~~ s:g/ ^^ \s* <[A..Z]>+ '_' [ 'BEGIN' | 'END' ] '_DECLS' \s* $$ //;
   $contents ~~ s:g/ [ 'struct' | 'union' ] <.ws> <[\w _]>+ <.ws> '{' .+? '};'//;
-  $contents ~~ s:g/'typedef' .+? ';'                                         //;
-  $contents ~~ s:g/ ^ .+? '\\' $                                             //;
-  $contents ~~ s:g/ ^^ <.ws> '}' <.ws>? $$                                   //;
+  $contents ~~ s:g/'typedef' .+? ';'//;
+  $contents ~~ s:g/ ^ .+? '\\' $//;
+  $contents ~~ s:g/ ^^ <.ws> '}' <.ws>? $$ //;
   $contents ~~ s:g/<!after ';'>\n/ /;
-  $contents ~~ s:g/ ^^ 'GIMPVAR' .+? $$                                      //;
+  $contents ~~ s:g/ ^^ 'GIMPVAR' .+? $$ //;
 
   # cw: Too permissive, but will work for most things. Needs an anchor to $$!
-  $contents ~~ s:g/ 'G_GNUC_' (<[A..Z]>+)+ %% '_' //;
+  $contents ~~ s:g/ 'G_GNUC_' <[A..Z]>+ //;
 
   $contents ~~ s:g/ 'gst_byte_reader_' [
                        'dup' | 'peek' | 'skip' | 'get'
@@ -258,25 +214,11 @@ sub MAIN (
   $contents ~~ s:g/ '((obj), ' .+? '))'//;
   $contents ~~ s:g/ '((cls), ' .+? '))'//;
   $contents ~~ s:g/ '((obj), ' .+? ',' .+? '))'//;
+  $contents ~~ s:g/ 'G_DEFINE_AUTOPTR_CLEANUP_FUNC (' .+? ', g_object_unref)' //;
+  # From X11 code.
+  $contents ~~ s:g/ '_Xconst '//;
 
-  $contents ~~ s:g/ 'G_DECLARE_' [ <[A..Z]>+ ]+ % '_' ' (' <-[)]>+ ')' //;
-  $contents ~~ s:g/ 'G_DECLARE_FINAL_TYPE('<-[)]>+')'//;
-
-  $contents ~~ s:g/ 'extern "C" {' //;
-  $contents ~~ s:g/ 'G_DEFINE_AUTOPTR_CLEANUP_FUNC' \s* '(' .+? ',' .+? ')' //;
-
-  $contents ~~ s:g/ 'GType' /\nGType/;
-
-  # Should be put behind an --extreme flag
-  if $extreme {
-    $contents ~~ s:g/ '#'\w+         //;
-    $contents ~~ s:g/ ')' \s+        / );\n /;
-  }
-
-  # $contents ~~ s:g/<availability>// if $bland;
-  $contents ~~ s:g/<enum>//;
-
-  $contents ~~ s:g/'RESTRICT'//;
+  $contents ~~ s:g/<availability>// if $bland;
 
   if $remove-from-start {
     # Remove unnecessary whitespace
@@ -286,7 +228,6 @@ sub MAIN (
     $remove-from-start ~~ s:g/\s\s+/:/;
     for ( $remove-from-start // () ).split(':') -> $r {
       #$*ERR.say: "Removing { $r } from start of line...";
-      say "Removing { $r } from start of line...";
       $contents ~~ s:g/ ^^ \s* <{ $r }> <[\s\r\n]>* //;
     }
   }
@@ -300,31 +241,29 @@ sub MAIN (
     for ( $remove-from-end // () ).split(':') -> $r {
       $contents ~~ s:g/ \s* $r \s* ';' $$ /;/;
     }
-    $contents ~~ s:g/ <!before ';'> <?{ $/.Str.chars }> $$/;/;
-  }
 
-  $contents.say;
+    #$contents ~~ s:g/ <!before ';'> <?{ $/.Str.chars }> $$/;/;
+    #$contents ~~ s:g/ ';'+ $//;
+  }
 
   $contents = $contents.lines.skip($trim-start).join("\n")
     if $trim-start;
+
   $contents = $contents.lines.reverse.skip($trim-end).reverse.join("\n")
     if $trim-end;
 
   my regex range { (\d+) '-' (\d+) }
+  my $s-fmt = '%0' ~ $contents.lines.log(10).Int + 1 ~ 'd';
+  $contents = (gather for $contents.lines.kv -> $k, $v {
+    # Last chance removal by line prefix.
+    #next if $v.starts-with('extern');
 
-  if $contents.lines.elems -> $e {
-    my $s-fmt = '%0' ~ $e.log(10).Int + 1 ~ 'd';
-    $contents = (gather for $contents.lines.kv -> $k, $v {
-      # Last chance removal by line prefix.
-      next if $v.starts-with('extern');
+    # Last chance to clean up artifacts left by processing:
+    my $val = $v;
+    $val .= subst( /\s*';'/ , ';' );
 
-      # Last chance to clean up artifacts left by processing:
-      my $val = $v;
-      $val .= subst( /\s*';'/ , ';' );
-
-      take "{ ($k + 1).fmt($s-fmt) }: { $val }"
-    }).join("\n");
-  }
+    take "{ ($k + 1).fmt($s-fmt) }: { $val }"
+  }).join("\n");
 
   # Check for multiple semi-colons on a line and split that line.
   # This is a pain in the ass, as we have to re-perform operations that
@@ -388,7 +327,9 @@ sub MAIN (
     C-Function-Def;
   my $top-rule  = $bland ?? 'top-bland'      !! 'top-normal';
   my $func-rule = $bland ?? 'function-bland' !! 'function-normal';
-  my $matched = grammar.parse($stripped-contents, rule => $top-rule);
+
+  #my $matched = grammar.parse($stripped-contents, rule => $top-rule);
+  my $matched = grammar.parse($stripped-contents);
 
   unless $matched {
     say '============';
@@ -397,11 +338,22 @@ sub MAIN (
     say 'Could not find any functions!';
     say '-----------------------------';
     $contents.say;
+    my $failed-output-filename = "hMethodMaker-failed-{ $filename.IO.basename }";
+    $failed-output-filename.IO.spurt($stripped-contents);
+    say "Failed output written to { $failed-output-filename }";
     exit 1;
   }
 
-  my %first-params;
-  for $matched{$func-rule}[] -> $m {
+  # say $matched<top-bland>.keys.gist;
+  # ddt $matched<top-bland>;
+  # exit;
+
+  $matched<top-bland><function-bland>.map(
+    *.<func_def><func_def_common><name-and-sig><sub>.Str
+  ).gist.say if $debug > 1
+
+  for $matched<top-bland><function-bland>[] -> $m {
+    my $fd = $m<func_def><func_def_common>;
     my $av = $bland ??
       { pre-definitions => ($m<pre-definitions> // '').Str } !!
       $m<availability>;
@@ -411,25 +363,27 @@ sub MAIN (
         !!
       ($av<ad> // '') ne '_DEPRECATED';
 
-    say "----------- PREDEF\n{ $m<pre-definitions>.gist }";
-
-    my $dep-for = do if $m<pre-definitions>[1] -> $df {
-      $df.Str;
-    } else {
-      '';
-    }
-
     my @p;
-    my $orig = $m<func_def><sub>.Str.trim;
-    my @tv = ($m<func_def><parameters><type> [Z] $m<func_def><parameters><var>);
+    my $orig = ($fd<name-and-sig><sub> // '').Str.trim;
+    my $collider = 1;
+
+    # cw: We must handle the initialization of @tv carefully, since a type
+    #     without a variable name is a valid C construct.
+    my @tv =
+      $fd<name-and-sig><parameters><type> [Z]
+      $fd<name-and-sig><parameters><var>;
+
+    # cw: No variable names, so redo with a collider. Note: Second parameter
+    #     must be a hash with the 't' key as the name of the variable!
+    unless @tv {
+      @tv = $fd<name-and-sig><parameters><type>
+      [Z]
+      'var' «~« ^$fd<name-and-sig><parameters><type>.elems
+    }
 
     @p.push: [ .[0], .[1] ] for @tv;
 
-    sub resolve-type($match is copy) {
-      say "M: { $match.gist }";
-
-
-      my $t         = $match ~~ Match ?? ($match<n> // 'int') !! $match;
+    sub resolve-type($t is copy) {
       my $orig-type = $t;
 
       # cw: FINALLY got around to doing something that should have been
@@ -439,21 +393,22 @@ sub MAIN (
       $t ~~ s/^float/gfloat/;
       $t ~~ s/^double/gdouble/;
       $t ~~ s/void/Pointer/;
-      $t ~~ s/GError/Pointer[GError]/;
+      $t ~~ s/GError/CArray[Pointer[GError]]/;
 
       # By testing time, $np should only contain the count of '*' in the Match
-      my $np = do given $match {
-        when Match { ( $match<p>.Str // '').Str.comb('*').elems }
+      my $np = (.[0]<p> // '').Str.comb('*');
+      say "{ $orig } / { $orig-type } --> NP: $np";
+      $t = "{ 'CArray[' x ($np - 1) }{ $t }{ ']' x ($np - 1) }" if $np > 1
 
-        default    { 0 }
-      }
-      $t = "{ 'CArray[' x ($np - 1) }{ $t }{ ']' x ($np - 1) }" if $np > 1;
       $t;
     }
 
     my @v = @p.map({
-      my $t = resolve-type( .[0] );
-      '$' ~ .[1]<t>.Str.trim ~ do if (my $np = (.[0]<p> // '').Str.chars) {
+      #.gist.say;
+      my $name = ( .[0]<n> // '' ).Str.trim;
+      my $t = resolve-type($name);
+      my $var-name = (.[1] ~~ Str ?? .[1] !! .[1]<t>.Str).trim;
+      '$' ~ $var-name ~ do if (my $np = (.[0]<p> // '').Str.chars) {
         if $np == 1 &&
            ($t eq <gfloat gdouble>.any || $t.starts-with(<gint guint>.any).so)
         {
@@ -461,17 +416,12 @@ sub MAIN (
         }
       }
     });
-    my @t     = @p.map({ resolve-type(.[0] ) });
-
-    %first-params{ @t.head }++ if @t.head.chars;
-
-    my $tmax  = @t.map( *.chars ).max;
-    my @t-sd  = @t.map( *.fmt("  %-{ $tmax }s") );
-
-    my $o_call = (@t-sd [Z] @v).join(",\n");
-
-    my $sub = $m<func_def><sub>.Str.trim;
-    $o_call ~= ', ...' if $m<func_def><va>;
+    my @t = @p.map({
+      resolve-type( ( .[0]<n> // '' ).Str.trim )
+    });
+    my $o_call = (@t [Z] @v).join(', ');
+    my $sub = $fd<name-and-sig><sub>.Str.trim;
+    $o_call ~= ', ...' if $fd<name-and-sig><parameters><va>;
 
     if $attr && $sub.starts-with("{$remove // ''}new_").not {
       @v.shift if +@v;
@@ -480,7 +430,7 @@ sub MAIN (
 
     my $sig = (@t [Z] @v).join(', ');
     my $call = @v.map( *.trim ).join(', ');
-    $sig ~= ', ...' if $m<func_def><va>;
+    $sig ~= ', ...' if $fd<name-and-sig><parameters><va>;
 
     if $attr {
       if $call.chars {
@@ -502,20 +452,20 @@ sub MAIN (
       }
     }
 
-    my $h = {
+    my $h = (
            avail => $avail,
-         dep-for => $dep-for,
         original => $orig.trim,
-         returns => $m<func_def><returns>,
+         returns => $fd<returns>,
            'sub' => $sub,
           params => @p,
           o_call => $o_call,
-            call => $call.subst(' is rw', '', :g),
+            call => $call,
              sig => $sig,
-       call_vars => @v,
+        call_sig => @v,
+     call_params => @v.map( $ ~ *[1] ),
       call_types => @t,
-         var_arg => $m<func_def><va>:exists
-    };
+         var_arg => $fd<name-and-sig><parameters><va>:exists
+    ).Hash;
 
     #my $p = 1;
 
@@ -536,7 +486,7 @@ sub MAIN (
         'uint32';
       }
       when 'gchar' | 'guchar' | 'char' {
-        # This logic may no longer be n.join('')ecessary.
+        # This logic may no longer be necessary.
         #$p++;
         'Str';
       }
@@ -623,27 +573,8 @@ sub MAIN (
     }
   }
 
-  sub O ($str, :$file = $out-file) {
-    use nqp;
-
-    say $str;
-    $file.say: nqp::hllize($str) if $file;
-  }
-  sub O-Raw ($str, :$raw-file = $out-raw-file) {
-    O($str, file => $raw-file);
-  }
-
   sub outputSub ($m, $method = False) {
-    my $o_call = $m<o_call>
-      ?? ( $m<o_call>.lines == 1
-        ?? "({ $m<o_call>.substr(2) })"
-        !! "(\n{ $m<o_call> }\n)"
-      )
-      !! '';
-
-    my $subcall = qq:to/CALL/.chomp;
-      sub { $m<original> } { $o_call }
-      CALL
+    my $subcall = "sub $m<original> ({ $m<o_call> })";
 
     # if $method {
     #   # This should be done, above.
@@ -653,36 +584,38 @@ sub MAIN (
     # }
 
     my $r = '';
-    $r ~= "\n  returns { $m<p6_return> }"           if $m<p6_return> &&
-                                                       $m<p6_return> ne 'void';
-    $r ~= "\n  is      DEPRECATED({ $m<dep-for> })" if $m<dep-for>;
-    $r ~= "\n  is      symbol('{ $m<original> }')"  if $method;
+    $r ~= "\n  is DEPRECATED"                 if $m<avail>.not;
+    $r ~= "\n  returns { $m<p6_return> }"     if $m<p6_return> &&
+                                                 $m<p6_return> ne 'void';
+    $r ~= "\n  is symbol('{ $m<original> }')" if $method;
 
-    O-Raw( qq:to/SUB/ );
+    say qq:to/SUB/;
       $subcall {
       $r }
-        is      native({ $lib })
-        is      export
+        is native({ $lib })
+        is export
       \{ * \}
       SUB
   }
 
   sub outputMethods {
-    my $invocant = $var ?? %first-params.pairs.sort( *.value ).head.key
-                        !! '';
-
     say "\nMETHODS\n-------" unless $no-headers;
     if %do_output<all> || %do_output<methods> {
-      for %methods.keys.sort -> $m {
+      for %methods.values.sort({
+        $^a.<sig>.split(/\, /)[0] cmp $^b.<sig>.split(/\, /)[0]
+        ||
+        $^a.<sub> cmp $^b.<sub>
+      }) -> $m {
+      #for %methods.keys.sort -> $m {
         if $output-only.defined {
           next unless $m ~~ /<{ $output-only }>/;
         }
 
-        my @sig_list = %methods{$m}<sig>.split(/\, /);
+        my @sig_list = $m<sig>.split(/\, /);
 
         my rule replacer { «[ 'Gtk'<[A..Z]>\w+ | 'GtkWindow' ]» };
-        my $sig = %methods{$m}<sig>;
-        my $call = %methods{$m}<call>;
+        my $sig = $m<sig>;
+        my $call = $m<call>;
         my $mult = '';
 
         # $mult = %methods{$m}<call_types>.grep(/<replacer>/) ?? 'multi ' !! ''
@@ -693,36 +626,17 @@ sub MAIN (
         #       GtkTreeIter
         #     >.none;
 
-        my $dep = %methods{$m}<avail>
-          ?? ''
-          !! "IS DEPRECATED{ %methods{$m}<dep-for> ?? "({
-              %methods{$m}<dep-for>.subst($remove, '') }) " !! ' '}";
-
-        my @lines = %methods{$m}<o_call>.lines;
-
-        if +@lines {
-          #say "Pre-Lines: { @lines.gist }";
-
-          @lines .= skip(1) if @lines.head.trim.split(/ \s+ /).head eq
-                               $invocant;
-
-          #say "Post Invocant ({ $invocant }): { @lines.gist }";
-        }
-        my $params = %methods{$m}<call_types>.elems
-          ?? ( +@lines == 1
-            ?? " ({ @lines.head.substr(2) })"
-            !! " (\n{ @lines.map( "  " ~  * ).join("\n") }\n  )"
-          )
-          !! '';
-        O( qq:to/METHOD/.chomp );
-          { $mult }method { %methods{$m}<sub> }{ $params } { $dep }\{
-            { %methods{$m}<original> }({ $call });
+        my $dep = $m<avail> ?? '' !! 'is DEPRECATED ';
+        my $params = $m<call_types>.elems ?? " ({ $sig })" !! '';
+        say qq:to/METHOD/.chomp;
+          { $mult }method { $m<sub> }{ $params } { $dep }\{
+            { $m<original> }({ $call });
           \}
         METHOD
 
         if $mult {
-          my $o_call = %methods{$m}<call_vars>.clone;
-          my $o_types = %methods{$m}<call_types>.clone;
+          my $o_call = $m<call_sig>.clone;
+          my $o_types = $m<call_types>.clone;
           for (^$o_types) -> $oidx {
             given $oidx {
               when s/GtkWindow/GTK::Window/ {
@@ -733,20 +647,20 @@ sub MAIN (
               }
             }
           }
-          my $oc = $o_call.join(', ');
-          my @pa = $o_types.Array [Z] %methods{$m}<call_vars>.Array;
+          my $oc = $m<call_params>.join(', ');
+          my @pa = $o_types.Array [Z] $m<call_sig>.Array;
           my $os = @pa.join(', ');
           my $params = @pa.grep( * ).elems ?? " ({ $os })" !! '';
 
           # { @pa.elems }
-          O( qq:to/METHOD/.chomp )
-            { $mult }method { %methods{$m}<sub> }{ $params }  \{
+          say qq:to/METHOD/.chomp;
+            { $mult }method { $m<sub> }{ $params }  \{
               samewith({ $oc });
             \}
           METHOD
 
         }
-        O( '' );
+        say '';
       }
     }
   }
@@ -776,9 +690,10 @@ sub MAIN (
   }
 
   outputMethods;
+
   if %do_output<all> || %do_output<subs> {
     say "\nSUBS\n----\n" unless $no-headers;
-    O-Raw( "\n\n### { $fn }\n" );
+    say "\n\n### $filename\n";
     outputSub( %methods{$_}    , $raw-methods) for %methods.keys.sort;
     outputSub( %getset{$_}<get>, $raw-methods) for  %getset.keys.sort;
     outputSub( %getset{$_}<set>, $raw-methods) for  %getset.keys.sort;
@@ -805,15 +720,4 @@ sub MAIN (
     $a.run;
   }
 
-  LAST {
-    if $out-raw-file {
-      $out-raw-file.close;
-      say "Sub definitions written to { $out-raw-file }";
-    }
-
-    if $out-file {
-      $out-file.close;
-      say "Methods written to { $out-file }.";
-    }
-  }
 }

@@ -20,20 +20,20 @@ my %config-defaults = (
 # cw: Thank you SO MUCH!
 # https://stackoverflow.com/questions/47124405/parsing-a-possibly-nested-braced-item-using-a-grammar
 our token nested-parens is export {
-   '(' ~ ')' [
-     || <- [()] >+
-     || <.before '('> <~~>
-   ]*
+  '(' ~ ')' [
+    || <- [()] >+
+    || <.before '('> <~~>
+  ]*
 }
 
 our token nested-braces is export {
-   '{' ~ '}' $<before>=[
-     || ( <- [{}] >+ )
-     || <.before '{'> <~~>
-   ]*
+  '{' ~ '}' $<before>=[
+    || ( <- [{}] >+ )
+    || <.before '{'> <~~>
+  ]*
 }
 
- our rule class-def is export {
+our rule class-def is export {
   'class'
     $<name>=[ \S+ ]
     [ $<misc>=(<-[{]>+) ]?
@@ -80,10 +80,11 @@ our token        t is export { 'unsigned' | 'unsigned'? <n> | '(' <p> <n>? ')' \
 
 our token      mod is export { 'extern' | 'const' | 'struct' | 'enum' }
 our token    macro is export { <[A..Z0..9]>+ }
+
 our regex     type is export {
-  [ 'unsigned'\s*<p>? | [ <mod> | <macro> ]+ %% \s ]?
+  [ [ <mod> | <macro> ]+ %% \s ]?
   $<name>=[
-    <n>\s*$<a>='[' (\d+)? ']'
+    <n>\s*$<a>='[' (\d+) ']'
     |
     <n> <p>?
   ]?
@@ -94,50 +95,39 @@ our token postdec is export { (<[A..Z0..9]>+)+ %% '_' \s* [ '(' .+? ')' ]? }
 our token      ad is export { 'AVAILABLE' | 'DEPRECATED' }
 
 our token returns is export {
-  'unsigned' | [ <mod>+ %% \s]? <.ws> <t> \s* <p>?
+  [ <mod>+ %% \s]? <.ws> <t> \s* <p>?
 }
 
 our rule parameters is export {
-    '(void)'
+  '(void)'
   |
-    '(' [ <type> <macro>? <var>? ]+ % [ \s* ',' \s* ] [','? $<va>='...' ]? ')'
+  '('
+    [ <type> <macro>? <var>? ]+ % [ \s* ',' \s* ]
+    [','? $<va>='...' ]?
+  ')'
 }
 
-our rule true-func-def is export {
-  $<sub>=[ \w+ ]\s*<parameters>
+our rule name-and-sig is export {
+  [
+    $<sub>=<n> |
+    '(*' $<sub>=<n> ')'
+  ]\s*<parameters>
 }
 
 our rule func_def_common is export {
   'extern'?
     $<returns>=<type>
-  [
-      $<fd>=<true-func-def>
-    |
-      $<fd>=[ '(*' <true-func-def> ')' ]\s*<parameters>
-  ]
+    <name-and-sig>
 }
 
 our rule func_block is export {
   <func_def_common>\s*<nested-braces>
 }
 
-our rule func_def {
-  <returns>
-  $<sub>=[
-      <func_name>
-    |
-      '(*' <func_name> ')'
-  ]
-  <parameters>
-  [ <postdec>+ % \s* ]?';'';'?
+our rule func_def is export {
+  <func_def_common>
+  [ <postdec>+ % \s* ]?';'+
 }
-
-# our rule func_def is export {
-#   <func_def_common>
-#   [ <postdec>+ % \s* ]?';'+
-# }
-
-
 
 
 our rule static-inline-func is export {

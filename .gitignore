@@ -1,0 +1,5 @@
+.precomp
+.touch
+LastBuildResults*
+*.*bak
+scripts-copy/

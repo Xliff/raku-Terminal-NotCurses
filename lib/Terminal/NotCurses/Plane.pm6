@@ -1000,7 +1000,7 @@ class Terminal::NotCurses::Plane {
   proto method putwstr (|)
   { * }
 
-  multi method putwstr ($str, :$encoding = 'utf8') {
+  multi method putwstr (Str $str, :$encoding = 'utf8') {
     my $b  = $str.encode($encoding);
     my $ca = CArray[uint64].new( |$b, 0 );
 

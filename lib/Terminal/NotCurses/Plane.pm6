@@ -18,7 +18,6 @@ class Terminal::NotCurses::Plane {
   { $!p }
 
   method new (ncplane $plane) {
-    say "P: { $plane }";
     $plane ?? self.bless( :$plane ) !! Nil;
   }
 
@@ -1012,9 +1011,9 @@ class Terminal::NotCurses::Plane {
   }
 
   multi method qrcode (
-    Str()  $data,
-           $ymax     is rw,
-           $xmax     is rw,
+    Str    $data,
+    Int    $ymax       is rw,
+    Int    $xmax       is rw,
           :$encoding        = 'utf8',
     Int() :size(:$len)      = $data.encode($encoding).bytes
   ) {
@@ -1024,13 +1023,14 @@ class Terminal::NotCurses::Plane {
       CArray[uint8].new( |$b, 0 )
     );
 
-    samewith($ymax, $xmax, $data, $len);
+    samewith($ymax, $xmax, $ca, $len, :buf);
   }
   multi method qrcode (
-            $ymax is rw,
-            $xmax is rw,
-    Pointer $data,
-    size_t  $len
+    Int      $ymax is rw,
+    Int      $xmax is rw,
+    Pointer  $data,
+    Int      $len,
+            :buf(:$buffer) is required
   ) {
     my size_t  $l      =  $len;
     my uint32 ($y, $x) = ($ymax, $xmax);
@@ -1224,17 +1224,18 @@ class Terminal::NotCurses::Plane {
   #   ncplane_set_fg_palindex($!p);
   # }
   #
-  # method ncplane_set_fg_rgb (
-  #   ncplane  $n,
-  #   uint32_t $channel
-  # ) {
-  #   ncplane_set_fg_rgb($!p, $channel);
-  # }
-  #
-  # method ncplane_set_fg_rgb8 (ncplane $n) {
-  #   ncplane_set_fg_rgb8($!p);
-  # }
-  #
+  method set_fg_rgb (Int() $channel) {
+    my uint32 $c = $channel;
+
+    ncplane_set_fg_rgb($!p, $c);
+  }
+
+  method set_fg_rgb8 (Int() $r, Int() $g, Int() $b) {
+    my uint32 ($rr, $gg, $bb) = ($r, $g, $b);
+
+    ncplane_set_fg_rgb8($!p, $rr, $gg, $bb);
+  }
+
   # method ncplane_set_fg_rgb8_clipped (
   #   ncplane $n,
   #   gint    $r,

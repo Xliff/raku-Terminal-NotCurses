@@ -1062,8 +1062,8 @@ sub ncplane_putwstr_yx (
 
 sub ncplane_qrcode (
   ncplane $n,
-  int32   $ymax is rw,
-  int32   $xmax is rw,
+  uint32  $ymax is rw,
+  uint32  $xmax is rw,
   Pointer $data,
   size_t  $len
 )
@@ -1234,7 +1234,12 @@ sub ncplane_set_bg_rgb (
   is      export
 { * }
 
-sub ncplane_set_bg_rgb8 (ncplane $n)
+sub ncplane_set_bg_rgb8 (
+  ncplane $n,
+  uint32  $r,
+  uint32  $g,
+  uint32  $b
+)
   returns int32
   is      native(&notcurses)
   is      export
@@ -1296,7 +1301,12 @@ sub ncplane_set_fg_rgb (
   is      export
 { * }
 
-sub ncplane_set_fg_rgb8 (ncplane $n)
+sub ncplane_set_fg_rgb8 (
+  ncplane $n,
+  uint32  $r,
+  uint32  $g,
+  uint32  $b
+)
   returns int32
   is      native(&notcurses)
   is      export

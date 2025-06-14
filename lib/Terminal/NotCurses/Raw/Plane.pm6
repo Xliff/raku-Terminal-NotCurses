@@ -271,7 +271,7 @@ sub ncplane_dim_yx (
 sub ncplane_double_box_sized (
   ncplane $n,
   uint16  $styles,
-  uint64  $channels
+  uint64  $channels,
   uint32  $ylen,
   uint32  $xlen,
   uint32  $ctlword
@@ -285,7 +285,7 @@ sub ncplane_double_box_sized (
 sub ncplane_double_box (
   ncplane $n,
   uint16  $styles,
-  uint64  $channels
+  uint64  $channels,
   nccell  $ul,
   nccell  $ur,
   nccell  $ll,
@@ -636,7 +636,7 @@ sub ncplane_parent_const (ncplane $n)
 sub ncplane_perimeter_double (
   ncplane $n,
   uint16  $stylemask,
-  uint64  $channels
+  uint64  $channels,
   uint32  $ctlword
 )
   returns int32
@@ -648,7 +648,7 @@ sub ncplane_perimeter_double (
 sub ncplane_perimeter_rounded (
   ncplane $n,
   uint16  $stylemask,
-  uint64  $channels
+  uint64  $channels,
   uint32  $ctlword
 )
   returns int32
@@ -1288,7 +1288,7 @@ sub ncplane_set_fg_palindex (ncplane $n)
 { * }
 
 sub ncplane_set_fg_rgb (
-  ncplane $n,$plane
+  ncplane $plane,
   uint32  $channel
 )
   returns int32

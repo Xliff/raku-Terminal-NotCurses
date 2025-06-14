@@ -69,7 +69,7 @@ class Terminal::NotCurses::Plane {
     samewith($s, $c);
   }
   multi method ascii_box (CArray[uint16] $s, CArray[uint64] $c) {
-    ncplane_ascii_box_export($!p, $s, $c);
+    ncplane_ascii_box($!p, $s, $c);
   }
 
   proto method at_cursor (|)
@@ -115,7 +115,7 @@ class Terminal::NotCurses::Plane {
   }
 
   method bchannel  {
-    ncplane_bchannel_export($!p);
+    ncplane_bchannel($!p);
   }
 
   method below {
@@ -139,12 +139,12 @@ class Terminal::NotCurses::Plane {
   multi method bg_rgb8 ($r is rw, $g is rw, $b is rw) {
     my int32 ($rr, $gg, $bb) = 0 xx 3;
 
-    my $r = ncplane_bg_rgb8_export($!p, $rr, $gg, $bb);
+    my $r = ncplane_bg_rgb8($!p, $rr, $gg, $bb);
     return Nil unless $r;
     ($r, $g, $b) = ($rr, $gg, $bb);
   }
   multi method bg_rgb {
-    ncplane_bg_rgb_export($!p);
+    ncplane_bg_rgb($!p);
   }
 
   method box (
@@ -166,7 +166,7 @@ class Terminal::NotCurses::Plane {
     nccell() $hline,
     nccell() $vline
   ) {
-    ncplane_box_sized_export($!p, $ul, $ur, $ll, $lr, $hline, $vline);
+    ncplane_box_sized($!p, $ul, $ur, $ll, $lr, $hline, $vline);
   }
 
   proto method center_abs (|)
@@ -199,7 +199,7 @@ class Terminal::NotCurses::Plane {
   }
 
   method cursor_x {
-    ncplane_cursor_x_export($!p);
+    ncplane_cursor_x($!p);
   }
 
   proto method cursor_yx (|)
@@ -215,11 +215,11 @@ class Terminal::NotCurses::Plane {
   }
 
   method cursor_y {
-    ncplane_cursor_y_export($!p);
+    ncplane_cursor_y($!p);
   }
 
   method ncplane_descendant_p (ncplane() $ancestor) {
-    so ncplane_descendant_p_export($!p, $ancestor);
+    so ncplane_descendant_p($!p, $ancestor);
   }
 
   method destroy {
@@ -231,11 +231,11 @@ class Terminal::NotCurses::Plane {
   }
 
   method dim_x {
-    ncplane_dim_xexport($!p);
+    ncplane_dim_x($!p);
   }
 
   method dim_y {
-    ncplane_dim_yexport($!p);
+    ncplane_dim_y($!p);
   }
 
   proto method dim_yx (|)
@@ -263,7 +263,7 @@ class Terminal::NotCurses::Plane {
     my uint64  $c          =  $channels;
     my uint32 ($y, $x, $w) = ($ylen, $xlen, $ctlword);
 
-    ncplane_double_box_sized_export($!p, $s, $c, $y, $x, $w);
+    ncplane_double_box_sized($!p, $s, $c, $y, $x, $w);
   }
 
   multi method box (
@@ -346,12 +346,220 @@ class Terminal::NotCurses::Plane {
     ncplane_dup($!p, $opaque);
   }
 
+  method erase {
+    ncplane_erase($!p);
+  }
+
+  method erase_region (
+    Int() $ystart,
+    Int() $xstart,
+    Int() $ylen,
+    Int() $xlen
+  ) {
+    my int32 = ($yy, $xx, $yl, $xl) = ($ystart, $xstart, $ylen, $xlen);
+
+    ncplane_erase_region($!p, $yy, $xx, $yl, $xl);
+  }
+
+  multi method fadein (Int $t, &fader) {
+    samewith($t.Num, &fader);
+  }
+  multi method fadein (Num $t, &fader) {
+    my $ts = timespec.new;
+    ($ts.tv_sec, $ts.tv_usec) = ( $ts.Int, ($ts - $ts.Int) * e6 )
+
+    samewith($ts, &fader);
+  }
+  method fadein (
+    timespec $ts,
+             &fader,
+    Pointer  $curry  = Pointer
+  ) {
+    ncplane_fadein($!p, $ts, &fader, $curry);
+  }
+
+  method fadein_iteration (
+    ncfadectx() $nctx,
+    Int()       $iter,
+                &fader,
+    Pointer     $curry  = Pointer
+  ) {
+    my int32 $i = $iter;
+
+    ncplane_fadein_iteration($!p, $nctx, $iter, &fader, $curry);
+  }
+
+  multi method fadeout (Int $t, &fader) {
+    samewith($t.Num, &fader);
+  }
+  multi method fadeout (Num $t, &fader) {
+    my $ts = timespec.new;
+    ($ts.tv_sec, $ts.tv_usec) = ( $ts.Int, ($ts - $ts.Int) * e6 )
+
+    samewith($ts, &fader);
+  }
+  method fadeout (
+    timespec $ts,
+             &fader,
+    Pointer  $curry  = Pointer
+  ) {
+    ncplane_fadeout($!p, $ts, &fader, $curry);
+  }
+
+  method fadeout_iteration (
+    ncfadectx $nctx,
+    Int()       $iter,
+                &fader,
+    Pointer     $curry  = Pointer
+  ) {
+    my int32 $i = $iter;
+
+    ncplane_fadeout_iteration($!p, $nctx, $iter, &fader, $curry);
+  }
+
+  method fchannel {
+    ncplane_fchannel($!p);
+  }
+
+  method fg_alpha {
+    ncplane_fg_alpha($!p);
+  }
+
+  method fg_default_p {
+    ncplane_fg_default_p($!p);
+  }
+
+  proto method fg_rgb8 (|)
+  { * }
+
+  multi method fg_rgb8 {
+    samewith($, $, $);
+  }
+  multi method fg_rgb8 ($r is rw, $g is rw, $b is rw) {
+    my int32 ($rr, $gg, $bb) = 0 xx 3;
+
+    my $r = ncplane_fg_rgb8($!p, $rr, $gh, $bb);
+    return Nil $r;
+    ($r, $g, $b) = ($rr, $gh, $bb);
+  }
+
+  method fg_rgb {
+    ncplane_fg_rgb($!p);
+  }
+
+  method format (
+    Int() $y,
+    Int() $x,
+    Int() $ylen,
+    Int() $xlen,
+    Int() $stylemask
+  ) {
+    my int32  ($yy, $xx) = ($y, $x);
+    my uint32 ($yl, $xl) = ($ylen, $xlen);
+    my uint16  $s        =  $stylemask;
+
+    ncplane_format($!p, $y, $x, $yl, $xl, $s);
+  }
+
+  method gradient (
+    Int()  $y,
+    Int()  $x,
+    Int()  $ylen,
+    Int()  $xlen,
+    Str()  $egc,
+    Int()  $styles,
+    Int()  $ul,
+    Int()  $ur,
+    Int()  $ll,
+    Int()  $lr
+  ) {
+    my int32  ($yy, $xx, $yl, $xl)     = ($y, $x, $ylen, $xlen);
+    my uint16  $s                      =  $styles
+    my uint64 ($uul, $uur, $lll, $llr) = ($ul, $ur, $ll, $lr);
+
+    ncplane_gradient(
+      $!p,
+      $yy,
+      $xx,
+      $yl,
+      $xl,
+      $egc,
+      $s,
+      $uul,
+      $uur,
+      $lll,
+      $llr
+    );
+  }
+
+  method gradient2x1 (
+    Int() $y,
+    Int() $x,
+    Int() $ylen,
+    Int() $xlen,
+    Int() $ul,
+    Int() $ur,
+    Int() $ll,
+    Int() $lr
+  ) {
+    my int32  ($yy,  $xx,  $yl,  $xl)  = ($y, $x, $ylen, $xlen);
+    my uint64 ($uul, $uur, $lll, $llr) = ($ul, $ur, $ll, $lr);
+
+    ncplane_gradient2x1($!p, $yy, $xx, $yl, $xl, $uul, $uur, $lll, $llr);
+  }
+
+  method halign (Int() $align, Int() $c) {
+    my ncalign_e $a  = $align;
+    my gint      $cc = $c;
+
+    ncplane_halign_export($!p, $a, $cc);
+  }
+
+  method hline (nccell() $c) {
+    ncplane_hline($!p, $c);
+  }
+
+  method hline_interp (
+    nccell() $c,
+    Int()    $len
+    Int()    $c1,
+    Int()    $c2
+  ) {
+    my int32   $l          =  $len;
+    my uint64 ($cc1, $cc2) = ($c1, $c2);
+
+    ncplane_hline_interp($!p, $c, $l, $cc1, $cc2);
+  }
+
+  method mergedown (
+    ncplane() $dst,
+    Int()     $begsrcy,
+    Int()     $begsrcx,
+    Int()     $leny,
+    Int()     $lenx,
+    Int()     $dsty,
+    Int()     $dstx
+  ) {
+    my int32  ($sy, $sx, $dy, $dx) = ($begsrcy, $begsrxc, $dsty, $dstx);
+    my uint32 ($ly, $lx)           = ($leny, $lenx);
+
+    ncplane_mergedown($src, $dst, $sy, $sx, $ly, $lx, $dy, $dx);
+  }
+
+  method mergedown_simple (ncplane() $dst) {
+    ncplane_mergedown_simple($src, $dst);
+  }
+
   method move_above (ncplane() $above) {
     ncplane_move_above($!p, $above);
   }
 
   method move_below (ncplane() $below) {
     ncplane_move_below($!p, $below);
+  }
+
+  method move_bottom {
+    ncplane_move_bottom($!p);
   }
 
   method move_family_above (ncplane() $targ) {
@@ -362,7 +570,25 @@ class Terminal::NotCurses::Plane {
     ncplane_move_family_below($!p, $targ);
   }
 
-  method ncplane_move_yx (Int() $y, Int() $x) {
+  method move_family_bottom {
+    ncplane_move_family_bottom($!p);
+  }
+
+  method move_family_top {
+    ncplane_move_family_top($!p);
+  }
+
+  method move_rel (Int() $y, Int() $x) {
+    my int32 ($yy, $xx) = ($y, $x;
+
+    ncplane_move_rel($!p, $yy, $xx);
+  }
+
+  method move_top {
+    ncplane_move_top($!p);
+  }
+
+  method move_yx (Int() $y, Int() $x) {
     my int32 ($yy, $xx) = ($y, $x);
 
     ncplane_move_yx($!p, $yy, $xx);
@@ -370,6 +596,22 @@ class Terminal::NotCurses::Plane {
 
   method name {
     ncplane_name($!p);
+  }
+
+  method notcurses {
+    ncplane_notcurses($!p);
+  }
+
+  method notcurses_const {
+    ncplane_notcurses_const($!p);
+  }
+
+  method off_styles {
+    ncplane_off_styles($!p);
+  }
+
+  method on_styles {
+    ncplane_on_styles($!p);
   }
 
   method parent {
@@ -574,135 +816,7 @@ class Terminal::NotCurses::Plane {
     ncplane_yx($!p, $y, $x);
   }
 
-  method ncplane_erase (ncplane $n) {
-    ncplane_erase($!p);
-  }
 
-  method ncplane_erase_region (
-    ncplane $n,
-    gint    $ystart,
-    gint    $xstart,
-    gint    $ylen,
-    gint    $xlen
-  ) {
-    ncplane_erase_region($!p, $ystart, $xstart, $ylen, $xlen);
-  }
-
-  method ncplane_fadein (
-    ncplane  $n,
-    timespec $ts,
-    fadecb   $fader,
-    Pointer  $curry
-  ) {
-    ncplane_fadein($!p, $ts, $fader, $curry);
-  }
-
-  method ncplane_fadein_iteration (
-    ncplane   $n,
-    ncfadectx $nctx,
-    gint      $iter,
-    fadecb    $fader,
-    Pointer   $curry
-  ) {
-    ncplane_fadein_iteration($!p, $nctx, $iter, $fader, $curry);
-  }
-
-  method ncplane_fadeout (
-    ncplane  $n,
-    timespec $ts,
-    fadecb   $fader,
-    Pointer  $curry
-  ) {
-    ncplane_fadeout($!p, $ts, $fader, $curry);
-  }
-
-  method ncplane_fadeout_iteration (
-    ncplane   $n,
-    ncfadectx $nctx,
-    gint      $iter,
-    fadecb    $fader,
-    Pointer   $curry
-  ) {
-    ncplane_fadeout_iteration($!p, $nctx, $iter, $fader, $curry);
-  }
-
-  method ncplane_format (
-    ncplane $n,
-    gint    $y,
-    gint    $x,
-    ylen    $stylemask
-  ) {
-    ncplane_format($!p, $y, $x, $stylemask);
-  }
-
-  method ncplane_gradient (
-    ncplane  $n,
-    gint     $y,
-    gint     $x,
-    ylen     $egc,
-    xlen     $styles,
-    Str      $ul,
-    uint16_t $ur,
-    uint64_t $ll,
-    uint64_t $lr
-  ) {
-    ncplane_gradient($!p, $y, $x, $egc, $styles, $ul, $ur, $ll, $lr);
-  }
-
-  method ncplane_gradient2x1 (
-    ncplane  $n,
-    gint     $y,
-    gint     $x,
-    ylen     $ul,
-    xlen     $ur,
-    uint32_t $ll,
-    uint32_t $lr
-  ) {
-    ncplane_gradient2x1($!p, $y, $x, $ul, $ur, $ll, $lr);
-  }
-
-  method ncplane_hline_interp (
-    ncplane  $n,
-    nccell   $c,
-    len      $c1,
-    uint64_t $c2
-  ) {
-    ncplane_hline_interp($!p, $c, $c1, $c2);
-  }
-
-  method ncplane_mergedown (
-    ncplane $src,
-    ncplane $dst,
-    gint    $begsrcy,
-    gint    $begsrcx,
-    leny    $dsty,
-    lenx    $dstx
-  ) {
-    ncplane_mergedown($src, $dst, $begsrcy, $begsrcx, $dsty, $dstx);
-  }
-
-  method ncplane_mergedown_simple (
-    ncplane $src,
-    ncplane $dst
-  ) {
-    ncplane_mergedown_simple($src, $dst);
-  }
-
-  method ncplane_notcurses (ncplane $n) {
-    ncplane_notcurses($!p);
-  }
-
-  method ncplane_notcurses_const (ncplane $n) {
-    ncplane_notcurses_const($!p);
-  }
-
-  method ncplane_off_styles (ncplane $n) {
-    ncplane_off_styles($!p);
-  }
-
-  method ncplane_on_styles (ncplane $n) {
-    ncplane_on_styles($!p);
-  }
 
   method ncplane_pixel_geom (
     ncplane $n,
@@ -905,69 +1019,6 @@ class Terminal::NotCurses::Plane {
     ncplane_double_boxexport($!p, $styles, $channels);
   }
 
-  method ncplane_fchannelexport (ncplane $n) {
-    ncplane_fchannelexport($!p);
-  }
-
-  method ncplane_fg_alphaexport (ncplane $n) {
-    ncplane_fg_alphaexport($!p);
-  }
-
-  method ncplane_fg_default_pexport (ncplane $n) {
-    ncplane_fg_default_pexport($!p);
-  }
-
-  method ncplane_fg_rgb8export (
-    ncplane $n,
-    gint    $r is rw,
-    gint    $g is rw,
-    gint    $b is rw
-  ) {
-    ncplane_fg_rgb8export($!p, $r, $g, $b);
-  }
-
-  method ncplane_fg_rgbexport (ncplane $n) {
-    ncplane_fg_rgbexport($!p);
-  }
-
-  method ncplane_halignexport (
-    ncplane   $n,
-    ncalign_e $align,
-    gint      $c
-  ) {
-    ncplane_halignexport($!p, $align, $c);
-  }
-
-  method ncplane_hlineexport (
-    ncplane $n,
-    nccell  $c
-  ) {
-    ncplane_hlineexport($!p, $c);
-  }
-
-  method ncplane_move_bottomexport (ncplane $n) {
-    ncplane_move_bottomexport($!p);
-  }
-
-  method ncplane_move_family_bottomexport (ncplane $n) {
-    ncplane_move_family_bottomexport($!p);
-  }
-
-  method ncplane_move_family_topexport (ncplane $n) {
-    ncplane_move_family_topexport($!p);
-  }
-
-  method ncplane_move_relexport (
-    ncplane $n,
-    gint    $y,
-    gint    $x
-  ) {
-    ncplane_move_relexport($!p, $y, $x);
-  }
-
-  method ncplane_move_topexport (ncplane $n) {
-    ncplane_move_topexport($!p);
-  }
 
   method ncplane_perimeter_doubleexport (
     ncplane  $n,

@@ -875,3 +875,10 @@ sub notcurses_core_init (notcurses_options $opts, Pointer $fp)
   is      native(&notcurses)
   is      export
 { * }
+
+
+sub notcurses_stop (notcurses) 
+  returns int32
+  is      native(&notcurses)
+  is      export
+{ * }

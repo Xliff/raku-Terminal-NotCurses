@@ -31,7 +31,9 @@ class Terminal::NotCurses::Main {
       :$flags
     );
 
-    notcurses_core_init($o, Pointer);
+    my $nc = notcurses_core_init($o, Pointer);
+    END { notcurses_stop($nc) }
+    $nc;
   }
 
 }

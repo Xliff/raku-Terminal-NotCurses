@@ -749,10 +749,18 @@ class Terminal::NotCurses::Plane {
     ncplane_pulse($!p, $ts, &fader, $curry);
   }
 
+  method putc (nccell() $c) {
+    ncplane_putc($!p, $c);
+  }
+
   method putc_yx (Int() $y, Int() $x, nccell() $c) {
     my int32 ($yy, $xx) = ($y, $x);
 
     ncplane_putc_yx($!p, $yy, $xx, $c);
+  }
+
+  method putchar (Str() $c) {
+    ncplane_putcharexport($!p, $c);
   }
 
   method putchar_stained (Str() $c) {
@@ -817,6 +825,85 @@ class Terminal::NotCurses::Plane {
     ncplane_putnstr_aligned($!p, $y, $align, $s, $str);
   }
 
+  method putstr_aligned (
+    Int() $y,
+    Int() $align,
+    Str() $s
+  ) {
+    my gint      $yy = $y;
+    my ncalign_e $a  = $align;
+
+    ncplane_putstr_alignedexport($!p, $yy, $a, $s);
+  }
+
+  method putstr_stained (Str() $gclusters) {
+    ncplane_putstr_stainedexport($!p, $gclusters);
+  }
+
+  method putstr_yxexport (Int() $y, Int() $x, Str() $gclusters) {
+    my gint ($yy, $xx) = ($y, $x);
+
+    ncplane_putstr_yxexport($!p, $yy, $xx, $gclusters);
+  }
+
+  method putstr (Str() $gclustarr) {
+    ncplane_putstrexport($!p, $gclustarr);
+  }
+
+  multi method puttext (
+     $y,
+     $align,
+     $text,
+    :$encoding     = 'utf8',
+    :size(:$bytes) = $text.encode($encoding).bytes
+  ) {
+    samewith($y, $align, $text, $bytes);
+  }
+  multi method puttext (Int() $y, Int() $align, Str() $text, Int() $bytes) {
+    my gint      $yy = $y;
+    my ncalign_e $a  = $align;
+    my size_t    $b  = $bytes,
+
+    ncplane_puttext($!p, $y, $a, $text, $b);
+  }
+
+  method ncplane_pututf32_yx (Int() $y, Int() $x) {
+    my gint   ($yy, $xx) = ($y, $x);
+    my uint32  $uu       =  $u;
+
+    ncplane_pututf32_yx($!p, $y, $x, $u);
+  }
+
+  method ncplane_putwc_stained (Int() $w) {
+    my wchar_t $ww = $w;
+
+    ncplane_putwc_stained($!p, $ww);
+  }
+
+  method ncplane_putwc_utf32 (
+    CArray[wchar_t] $w,
+                    $wchars is rw
+  ) {
+    my uint32 $ww = 0;
+
+    my $r = ncplane_putwc_utf32export($!p, $w, $ww);
+
+    $r ?? ($wchars = $ww) !! Nil;
+  }
+
+  method ncplane_putwc_yxexport (Int() $y, Int() $x, Int() $w) {
+    my gint    ($yy, $xx) = ($y, $x);
+    my wchar_t  $ww       =  $w;
+
+    ncplane_putwc_yx($!p, $yy, $xx, $ww);
+  }
+
+  method ncplane_putwc (Int() $w) {
+    my wchar_t $ww = $w;
+
+    ncplane_putwcexport($!p, $ww);
+  }
+
   proto method putwegc_stained (|)
   { * }
 
@@ -835,6 +922,26 @@ class Terminal::NotCurses::Plane {
     ncplane_putwegc_stained($!p, $gclust, $s);
   }
 
+  proto method ncplane_putwegcexport (|)
+  { * }
+
+  multi method ncplane_putwegcexport (Str() $str, :$encoding = 'utf8') {
+    samewith(
+      CArray[uint64].new( $str.encode($encoding ),
+      $
+    );
+  }
+  multi method ncplane_putwegc (
+    CArray[wchar_t] $gclust,
+                    $sbytes is rw
+  ) {
+    my size_t $s = 0;
+
+    my $r = ncplane_putwegc($!p, $gclust, $s);
+
+    $r ?? ($sbytes = $s) !! Nil;
+  }
+
   method putwstr_stained (Str $str, :$encoding = 'utf8') {
     my $b  = $s.encode($encoding);
     my $ca = CArray[uint64].new( |$b, 0 );
@@ -843,6 +950,31 @@ class Terminal::NotCurses::Plane {
   }
   method putwstr_stained (CArray[wchar_t] $gclustarr) {
     ncplane_putwstr_stained($!p, $gclustarr);
+  }
+
+  method ncplane_putwstr_alignedexport (
+    ncplane   $n,
+    gint      $y,
+    ncalign_e $align,
+    wchar_t   $gclustarr
+  ) {
+    ncplane_putwstr_alignedexport($!p, $y, $align, $gclustarr);
+  }
+
+  method ncplane_putwstr_yxexport (
+    ncplane $n,
+    gint    $y,
+    gint    $x,
+    wchar_t $gclustarr
+  ) {
+    ncplane_putwstr_yxexport($!p, $y, $x, $gclustarr);
+  }
+
+  method ncplane_putwstrexport (
+    ncplane $n,
+    wchar_t $gclustarr
+  ) {
+    ncplane_putwstrexport($!p, $gclustarr);
   }
 
   method reparent (ncplane() $newparent) {
@@ -956,16 +1088,6 @@ class Terminal::NotCurses::Plane {
     gint    $x is rw
   ) {
     ncplane_yx($!p, $y, $x);
-  }
-
-  method ncplane_puttext (
-    ncplane   $n,
-    gint      $y,
-    ncalign_e $align,
-    Str       $text,
-    size_t    $bytes
-  ) {
-    ncplane_puttext($!p, $y, $align, $text, $bytes);
   }
 
   method ncplane_qrcode (
@@ -1122,13 +1244,6 @@ class Terminal::NotCurses::Plane {
     ncplane_perimeterexport($!p, $ul, $ur, $ll, $lr, $hline, $vline);
   }
 
-  method ncplane_putcexport (
-    ncplane $n,
-    nccell  $c
-  ) {
-    ncplane_putcexport($!p, $c);
-  }
-
   method ncplane_putchar_yxexport (
     ncplane $n,
     gint    $y,
@@ -1136,13 +1251,6 @@ class Terminal::NotCurses::Plane {
     Str     $c
   ) {
     ncplane_putchar_yxexport($!p, $y, $x, $c);
-  }
-
-  method ncplane_putcharexport (
-    ncplane $n,
-    Str     $c
-  ) {
-    ncplane_putcharexport($!p, $c);
   }
 
   method ncplane_putegcexport (
@@ -1171,78 +1279,6 @@ class Terminal::NotCurses::Plane {
     ncplane_putnstrexport($!p, $s, $gclustarr);
   }
 
-  method ncplane_putstr_alignedexport (
-    ncplane   $n,
-    gint      $y,
-    ncalign_e $align,
-    Str       $s
-  ) {
-    ncplane_putstr_alignedexport($!p, $y, $align, $s);
-  }
-
-  method ncplane_putstr_stainedexport (
-    ncplane $n,
-    Str     $gclusters
-  ) {
-    ncplane_putstr_stainedexport($!p, $gclusters);
-  }
-
-  method ncplane_putstr_yxexport (
-    ncplane $n,
-    gint    $y,
-    gint    $x,
-    Str     $gclusters
-  ) {
-    ncplane_putstr_yxexport($!p, $y, $x, $gclusters);
-  }
-
-  method ncplane_putstrexport (
-    ncplane $n,
-    Str     $gclustarr
-  ) {
-    ncplane_putstrexport($!p, $gclustarr);
-  }
-
-  method ncplane_pututf32_yxexport (
-    ncplane  $n,
-    gint     $y,
-    gint     $x,
-    uint32_t $u
-  ) {
-    ncplane_pututf32_yxexport($!p, $y, $x, $u);
-  }
-
-  method ncplane_putwc_stainedexport (
-    ncplane $n,
-    wchar_t $w
-  ) {
-    ncplane_putwc_stainedexport($!p, $w);
-  }
-
-  method ncplane_putwc_utf32export (
-    ncplane $n,
-    wchar_t $w,
-    gint    $wchars is rw
-  ) {
-    ncplane_putwc_utf32export($!p, $w, $wchars);
-  }
-
-  method ncplane_putwc_yxexport (
-    ncplane $n,
-    gint    $y,
-    gint    $x,
-    wchar_t $w
-  ) {
-    ncplane_putwc_yxexport($!p, $y, $x, $w);
-  }
-
-  method ncplane_putwcexport (
-    ncplane $n,
-    wchar_t $w
-  ) {
-    ncplane_putwcexport($!p, $w);
-  }
-
   method ncplane_putwegc_yxexport (
     ncplane $n,
     gint    $y,
@@ -1251,39 +1287,6 @@ class Terminal::NotCurses::Plane {
     size_t  $sbytes
   ) {
     ncplane_putwegc_yxexport($!p, $y, $x, $gclust, $sbytes);
-  }
-
-  method ncplane_putwegcexport (
-    ncplane $n,
-    wchar_t $gclust,
-    size_t  $sbytes
-  ) {
-    ncplane_putwegcexport($!p, $gclust, $sbytes);
-  }
-
-  method ncplane_putwstr_alignedexport (
-    ncplane   $n,
-    gint      $y,
-    ncalign_e $align,
-    wchar_t   $gclustarr
-  ) {
-    ncplane_putwstr_alignedexport($!p, $y, $align, $gclustarr);
-  }
-
-  method ncplane_putwstr_yxexport (
-    ncplane $n,
-    gint    $y,
-    gint    $x,
-    wchar_t $gclustarr
-  ) {
-    ncplane_putwstr_yxexport($!p, $y, $x, $gclustarr);
-  }
-
-  method ncplane_putwstrexport (
-    ncplane $n,
-    wchar_t $gclustarr
-  ) {
-    ncplane_putwstrexport($!p, $gclustarr);
   }
 
   method ncplane_resize_simpleexport (ncplane $n) {

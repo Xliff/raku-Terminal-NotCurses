@@ -786,8 +786,8 @@ sub ncplane_putchar_stained (
 
 sub ncplane_putchar_yx (
   ncplane $n,
-  int32    $y,
-  int32    $x,
+  int32   $y,
+  int32   $x,
   Str     $c
 )
   returns int32
@@ -796,10 +796,7 @@ sub ncplane_putchar_yx (
   is      symbol('ncplane_putchar_yx_export')
 { * }
 
-sub ncplane_putchar (
-  ncplane $n,
-  Str     $c
-)
+sub ncplane_putchar (ncplane $n, Str $c)
   returns int32
   is      native(notcurses-export)
   is      export
@@ -932,10 +929,10 @@ sub ncplane_puttext (
 { * }
 
 sub ncplane_pututf32_yx (
-  ncplane  $n,
-  int32     $y,
-  int32     $x,
-  uint32 $u
+  ncplane $n,
+  int32   $y,
+  int32   $x,
+  uint32  $u
 )
   returns int32
   is      native(notcurses-export)
@@ -956,7 +953,7 @@ sub ncplane_putwc_stained (
 sub ncplane_putwc_utf32 (
   ncplane         $n,
   CArray[wchar_t] $w,
-  int32           $wchars is rw
+  uint32          $wchars is rw
 )
   returns int32
   is      native(notcurses-export)
@@ -1012,7 +1009,7 @@ sub ncplane_putwegc_yx (
 sub ncplane_putwegc (
   ncplane         $n,
   CArray[wchar_t] $gclust,
-  size_t          $sbytes
+  size_t          $sbytes is rw
 )
   returns int32
   is      native(notcurses-export)

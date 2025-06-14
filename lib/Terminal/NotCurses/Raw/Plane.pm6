@@ -634,9 +634,10 @@ sub ncplane_parent_const (ncplane $n)
 { * }
 
 sub ncplane_perimeter_double (
-  ncplane  $n,
-  uint16 $stylemask,
-  uint64 $channels
+  ncplane $n,
+  uint16  $stylemask,
+  uint64  $channels
+  uint32  $ctlword
 )
   returns int32
   is      native(notcurses-export)
@@ -645,9 +646,10 @@ sub ncplane_perimeter_double (
 { * }
 
 sub ncplane_perimeter_rounded (
-  ncplane  $n,
-  uint16 $stylemask,
-  uint64 $channels
+  ncplane $n,
+  uint16  $stylemask,
+  uint64  $channels
+  uint32  $ctlword
 )
   returns int32
   is      native(notcurses-export)
@@ -698,7 +700,8 @@ sub ncplane_printf_aligned (
   ncplane   $n,
   int32      $y,
   ncalign_e $align,
-  Str       $format
+  Str       $format,
+  Str
 )
   returns int32
   is      native(notcurses-export)
@@ -718,9 +721,10 @@ sub ncplane_printf_stained (
 
 sub ncplane_printf_yx (
   ncplane $n,
-  int32    $y,
-  int32    $x,
-  Str     $format
+  int32   $y,
+  int32   $x,
+  Str     $format,
+  Str
 )
   returns int32
   is      native(notcurses-export)
@@ -730,7 +734,8 @@ sub ncplane_printf_yx (
 
 sub ncplane_printf (
   ncplane $n,
-  Str     $format
+  Str     $format,
+  Str
 )
   returns int32
   is      native(notcurses-export)

@@ -147,6 +147,101 @@ class Terminal::NotCurses::Plane {
     ncplane_bg_rgb($!p);
   }
 
+  multi method box (
+           $styles,
+           $channels,
+          :$double    is required
+          :$ul        is copy,
+          :$ur        is copy,
+          :$ll        is copy,
+          :$lr        is copy,
+          :$hl        is copy,
+          :$vl        is copy,
+    Int() :$attr
+  ) {
+    ($ul, $ur, $ll, $lr, $hl, $vl) //= Terminal::NotCurses::Cells.double_box(
+      $!p,
+      $attr,
+      $channels
+    );
+
+    samewith($styles, $channels, $ul, $ur, $ll, $lr, $hl, $vl);
+  }
+  multi method box (
+           $styles,
+           $channels,
+          :$round     is required
+          :$ul        is copy,
+          :$ur        is copy,
+          :$ll        is copy,
+          :$lr        is copy,
+          :$hl        is copy,
+          :$vl        is copy,
+    Int() :$attr
+  ) {
+    ($ul, $ur, $ll, $lr, $hl, $vl) //= Terminal::NotCurses::Cells.rounded_box(
+      $!p,
+      $attr,
+      $channels
+    );
+
+    samewith($styles, $channels, $ul, $ur, $ll, $lr, $hl, $vl);
+  }
+  multi method box (
+         $styles,
+         $channels,
+        :$light     is required
+        :$ul        is copy,
+        :$ur        is copy,
+        :$ll        is copy,
+        :$lr        is copy,
+        :$hl        is copy,
+        :$vl        is copy,
+    Int() :$attr
+  ) {
+    ($ul, $ur, $ll, $lr, $hl, $vl) //= Terminal::NotCurses::Cells.light_box(
+      $!p,
+      $attr,
+      $channels
+    );
+
+    samewith($styles, $channels, $ul, $ur, $ll, $lr, $hl, $vl);
+  }
+  multi method box (
+           $styles,
+           $channels,
+          :$heavy     is required
+          :$ul        is copy,
+          :$ur        is copy,
+          :$ll        is copy,
+          :$lr        is copy,
+          :$hl        is copy,
+          :$vl        is copy,
+    Int() :$attr
+  ) {
+    ($ul, $ur, $ll, $lr, $hl, $vl) //= Terminal::NotCurses::Cells.heavy_box(
+      $!p,
+      $attr,
+      $channels
+    );
+
+    samewith($styles, $channels, $ul, $ur, $ll, $lr, $hl, $vl);
+  }
+  method box (
+    Int()    $styles,
+    Int()    $channels
+    nccell() $ul,
+    nccell() $ur,
+    nccell() $ll,
+    nccell() $lr,
+    nccell() $hl,
+    nccell() $vl
+  ) {
+    my uint16  $s = $styles;
+    my uint64  $c = $channels;
+
+    ncplane_box_export($s, $c, $ul, $ur, $ll, $lr, $hl, $vl);
+  }
   method box (
     nccell() $ul,
     nccell() $ur,
@@ -266,82 +361,6 @@ class Terminal::NotCurses::Plane {
     ncplane_double_box_sized($!p, $s, $c, $y, $x, $w);
   }
 
-  multi method box (
-           $styles,
-           $channels,
-          :$round     is required
-          :$ul        is copy,
-          :$ur        is copy,
-          :$ll        is copy,
-          :$lr        is copy,
-          :$hl        is copy,
-          :$vl        is copy,
-    Int() :$attr
-  ) {
-    ($ul, $ur, $ll, $lr, $hl, $vl) //= Terminal::NotCurses::Cells.rounded_box(
-      $!p,
-      $attr,
-      $channels
-    );
-
-    samewith($styles, $channels, $ul, $ur, $ll, $lr, $hl, $vl);
-  }
-  multi method box (
-         $styles,
-         $channels,
-        :$light     is required
-        :$ul        is copy,
-        :$ur        is copy,
-        :$ll        is copy,
-        :$lr        is copy,
-        :$hl        is copy,
-        :$vl        is copy,
-  Int() :$attr
-  ) {
-    ($ul, $ur, $ll, $lr, $hl, $vl) //= Terminal::NotCurses::Cells.light_box(
-      $!p,
-      $attr,
-      $channels
-    );
-
-    samewith($styles, $channels, $ul, $ur, $ll, $lr, $hl, $vl);
-  }
-  multi method box (
-           $styles,
-           $channels,
-          :$heavy     is required
-          :$ul        is copy,
-          :$ur        is copy,
-          :$ll        is copy,
-          :$lr        is copy,
-          :$hl        is copy,
-          :$vl        is copy,
-    Int() :$attr
-  ) {
-    ($ul, $ur, $ll, $lr, $hl, $vl) //= Terminal::NotCurses::Cells.heavy_box(
-      $!p,
-      $attr,
-      $channels
-    );
-
-    samewith($styles, $channels, $ul, $ur, $ll, $lr, $hl, $vl);
-  }
-  method box (
-    Int()    $styles,
-    Int()    $channels
-    nccell() $ul,
-    nccell() $ur,
-    nccell() $ll,
-    nccell() $lr,
-    nccell() $hl,
-    nccell() $vl
-  ) {
-    my uint16  $s = $styles;
-    my uint64  $c = $channels;
-
-    ncplane_box_export($s, $c, $ul, $ur, $ll, $lr, $hl, $vl);
-  }
-
   method dup (Pointer $opaque = gpointer) {
     ncplane_dup($!p, $opaque);
   }
@@ -366,7 +385,7 @@ class Terminal::NotCurses::Plane {
   }
   multi method fadein (Num $t, &fader) {
     my $ts = timespec.new;
-    ($ts.tv_sec, $ts.tv_usec) = ( $ts.Int, ($ts - $ts.Int) * e6 )
+    ($ts.tv_sec, $ts.tv_usec) = ( $ts.Int, $ts.&infix:<mod>(1) * 1e6 )
 
     samewith($ts, &fader);
   }
@@ -622,6 +641,114 @@ class Terminal::NotCurses::Plane {
     ncplane_parent_const($!p);
   }
 
+  method perimeter_double (
+    Int() $stylemask,
+    Int() $channels
+    Int() $ctlword
+  ) {
+    my uint16 $s = $stylemask;
+    my uint64 $c = $channels;
+    my uint32 $w = $ctlword;
+
+    ncplane_perimeter_double($!p, $s, $c, $w);
+  }
+
+  method perimeter_rounded (
+    Int() $stylemask,
+    Int() $channels
+    Int() $ctlword
+  ) {
+    my uint16 $s = $stylemask;
+    my uint64 $c = $channels;
+    my uint32 $w = $ctlword;
+
+    ncplane_perimeter_rounded($!p, $s, $c, $w);
+  }
+
+  method perimeter (
+    nccell() $ul,
+    nccell() $ur,
+    nccell() $ll,
+    nccell() $lr,
+    nccell() $hline,
+    nccell() $vline,
+    Int()    $ctlword
+  ) {
+    my uint32 $w = $ctlword;
+
+    ncplane_perimeterexport($!p, $ul, $ur, $ll, $lr, $hline, $vline, $w);
+  }
+
+  proto method pixel_geom (|)
+  { * }
+
+  multi method pixel_geom {
+    samewith($, $, $, $, $, $);
+  }
+  multi method pixel_geom (
+    $pxy      is rw,
+    $pxx      is rw,
+    $celldimy is rw,
+    $celldimx is rw,
+    $maxbmapy is rw,
+    $maxbmapx is rw
+  ) {
+    my uint32 ($px, $py, $cx, $cy, $mx, $my) = 0 xx 6;
+
+    ncplane_pixel_geom($!p, $px, $py, $cx, $cy, $mx, $my);
+
+    ($pxy, $pxx, $celldimy, $celldimx, $maxbmapy, $maxbmapx) =
+      ($px, $py, $cx, $cy, $mx, $my)
+  }
+
+  method polyfill_yx (Int() $y, Int() $x, nccell() $c) {
+    my int32 ($yy, $xx) = ($y, $x);
+
+    ncplane_polyfill_yx($!p, $yy, $xx, $c);
+  }
+
+  method printf_aligned (Int() $y, Int() $align, Str() $format) {
+    my gint      $yy = $y;
+    my ncalign_e $a  = $align;
+
+    ncplane_printf_alignedexport($!p, $y, $a, $format, Str);
+  }
+
+  method printf_stained (Str() $format) {
+    ncplane_printf_stained($!p, $f, Str);
+  }
+
+  method printf_yx (Int() $y, Int() $x, Str() $format) {
+    my int32 ($yy, $xx) = ($y, $x);
+
+    ncplane_printf_yx($!p, $y, $x, $format, Str);
+  }
+
+  method printf (Str() $format) {
+    ncplane_printf($!p, $format, Str);
+  }
+
+  multi method pulse (Int $time, &fader) {
+    samewith($time.Num, &fader);
+  }
+  multi method pulse (Rat $time, &fader) {
+    samewith($time.Num, &fader);
+  }
+  multi method pulse (Num $time, &fader) {
+    my $ts = timespec.new(
+      tv_sec  => $time.Int,
+      tv_usec => $time.&infix:<mod>(1) * 1e6
+    );
+    samewith($ts, &fader);
+  }
+  multi method pulse (
+    timespec() $ts,
+               &fader,
+    Pointer    $curry  = Pointer
+  ) {
+    ncplane_pulse($!p, $ts, &fader, $curry);
+  }
+
   method putc_yx (Int() $y, Int() $x, nccell() $c) {
     my int32 ($yy, $xx) = ($y, $x);
 
@@ -632,7 +759,7 @@ class Terminal::NotCurses::Plane {
     ncplane_putchar_stained($!p, $c);
   }
 
-  method ncplane_putegc_stained (
+  method putegc_stained (
     Str() $gclust,
     Int() $sbytes = $gclust.encode.bytes
   ) {
@@ -641,10 +768,10 @@ class Terminal::NotCurses::Plane {
     ncplane_putegc_stained($!p, $gclust, $s);
   }
 
-  proto method ncplane_putegc_yx (|)
+  proto method putegc_yx (|)
   { * }
 
-  multi method ncplane_putegc_yx (
+  multi method putegc_yx (
      $y,
      $x,
      $gclust,
@@ -653,7 +780,7 @@ class Terminal::NotCurses::Plane {
   ) {
     samewith($y, $x, $gclust, $sbytes);
   }
-  multi method ncplane_putegc_yx (
+  multi method putegc_yx (
     Int() $y,
     Int() $x,
     Str() $gclust,
@@ -665,26 +792,41 @@ class Terminal::NotCurses::Plane {
     ncplane_putegc_yx($!p, $yy, $xx, $gclust, $s);
   }
 
-  method ncplane_putnstr_aligned (
-    ncplane   $n,
-    gint      $y,
-    ncalign_e $align,
-    size_t    $s,
-    Str       $str
+  proto method putnstr_aligned (|)
+  { * }
+
+  multi method putnstr_aligned (
+     $y,
+     $str,
+    :$align,
+    :$encoding = 'utf8',
+    :$size     = $str.encode($encoding).bytes
   ) {
+    samewith($y, $align, $size, $str);
+  }
+  multi method putnstr_aligned (
+    Int() $y,
+    Int() $align,
+    Int() $s,
+    Str() $str
+  ) {
+    my gint      $yy = $y;
+    my ncalign_e $a  = $align,
+    my size_t    $ss = $s;
+
     ncplane_putnstr_aligned($!p, $y, $align, $s, $str);
   }
 
-  proto method ncplane_putwegc_stained (|)
+  proto method putwegc_stained (|)
   { * }
 
-  multi method ncplane_putwegc_stained ($s, :$size, :$encoding = 'utf8') {
+  multi method putwegc_stained ($s, :$size, :$encoding = 'utf8') {
     my $b  = $s.encode($encoding);
-    my $ca = CArray[uint64].new($b);
+    my $ca = CArray[uint64].new( |$b, 0 );
 
     samewith($ca, $size // $ca.elems);
   }
-  multi method ncplane_putwegc_stained (
+  multi method putwegc_stained (
     CArray[wchar_t] $gclust,
     Int()           $sbytes
   ) {
@@ -693,10 +835,13 @@ class Terminal::NotCurses::Plane {
     ncplane_putwegc_stained($!p, $gclust, $s);
   }
 
-  method ncplane_putwstr_stained (
-    ncplane $n,
-    wchar_t $gclustarr
-  ) {
+  method putwstr_stained (Str $str, :$encoding = 'utf8') {
+    my $b  = $s.encode($encoding);
+    my $ca = CArray[uint64].new( |$b, 0 );
+
+    samewith($ca);
+  }
+  method putwstr_stained (CArray[wchar_t] $gclustarr) {
     ncplane_putwstr_stained($!p, $gclustarr);
   }
 
@@ -709,13 +854,16 @@ class Terminal::NotCurses::Plane {
   }
 
   method ncplane_resize (
-    ncplane  $n,
-    gint     $keepy,
-    gint     $keepx,
-    keepleny $yoff,
-    keeplenx $xoff
+    int32    $keepy,
+    int32    $keepx,
+    uint32   $keepleny,
+    uint32   $keeplenx,
+    uint32   $yoff,
+    uint32   $xoff,
+    uint32   $ylen,
+    uint32   $xlen
   ) {
-    ncplane_resize($!p, $keepy, $keepx, $yoff, $xoff);
+    ncplane_resize($!p, $keepy, $keepx, $keepleny, $keeplenx, $yoff, $xoff, $ylen, $xlen);
   }
 
   method ncplane_rotate_ccw (ncplane $n) {
@@ -757,10 +905,7 @@ class Terminal::NotCurses::Plane {
     ncplane_set_base($!p, $egc, $stylemask, $channels);
   }
 
-  method ncplane_set_base_cell (
-    ncplane $n,
-    nccell  $c
-  ) {
+  method ncplane_set_base_cell (nccell() $c) {
     ncplane_set_base_cell($!p, $c);
   }
 
@@ -768,10 +913,7 @@ class Terminal::NotCurses::Plane {
     ncplane_set_scrolling($!p);
   }
 
-  method ncplane_set_userptr (
-    ncplane $n,
-    Pointer $opaque
-  ) {
+  method ncplane_set_userptr (Pointer $opaque) {
     ncplane_set_userptr($!p, $opaque);
   }
 
@@ -814,38 +956,6 @@ class Terminal::NotCurses::Plane {
     gint    $x is rw
   ) {
     ncplane_yx($!p, $y, $x);
-  }
-
-
-
-  method ncplane_pixel_geom (
-    ncplane $n,
-    gint    $pxy is rw,
-    gint    $pxx is rw,
-    gint    $celldimy is rw,
-    gint    $celldimx is rw,
-    gint    $maxbmapy is rw,
-    gint    $maxbmapx is rw
-  ) {
-    ncplane_pixel_geom($!p, $pxy, $pxx, $celldimy, $celldimx, $maxbmapy, $maxbmapx);
-  }
-
-  method ncplane_polyfill_yx (
-    ncplane $n,
-    gint    $y,
-    gint    $x,
-    nccell  $c
-  ) {
-    ncplane_polyfill_yx($!p, $y, $x, $c);
-  }
-
-  method ncplane_pulse (
-    ncplane  $n,
-    timespec $ts,
-    fadecb   $fader,
-    Pointer  $curry
-  ) {
-    ncplane_pulse($!p, $ts, $fader, $curry);
   }
 
   method ncplane_puttext (
@@ -984,24 +1094,6 @@ class Terminal::NotCurses::Plane {
     ncplane_vline_interp($!p, $c, $c1, $c2);
   }
 
-  method ncplane_vprintf_aligned (
-    ncplane   $n,
-    gint      $y,
-    ncalign_e $align,
-    Str       $format,
-    va_list   $ap
-  ) {
-    ncplane_vprintf_aligned($!p, $y, $align, $format, $ap);
-  }
-
-  method ncplane_vprintf_stained (
-    ncplane $n,
-    Str     $format,
-    va_list $ap
-  ) {
-    ncplane_vprintf_stained($!p, $format, $ap);
-  }
-
   method ncplane_vprintf_yx (
     ncplane $n,
     gint    $y,
@@ -1014,26 +1106,8 @@ class Terminal::NotCurses::Plane {
 
   method ncplane_dim_yexport (ncplane $n) {
     ncplane_dim_yexport($!p);
-  }channels
   ) {
     ncplane_double_boxexport($!p, $styles, $channels);
-  }
-
-
-  method ncplane_perimeter_doubleexport (
-    ncplane  $n,
-    uint16_t $stylemask,
-    uint64_t $channels
-  ) {
-    ncplane_perimeter_doubleexport($!p, $stylemask, $channels);
-  }
-
-  method ncplane_perimeter_roundedexport (
-    ncplane  $n,
-    uint16_t $stylemask,
-    uint64_t $channels
-  ) {
-    ncplane_perimeter_roundedexport($!p, $stylemask, $channels);
   }
 
   method ncplane_perimeterexport (
@@ -1046,38 +1120,6 @@ class Terminal::NotCurses::Plane {
     nccell  $vline
   ) {
     ncplane_perimeterexport($!p, $ul, $ur, $ll, $lr, $hline, $vline);
-  }
-
-  method ncplane_printf_alignedexport (
-    ncplane   $n,
-    gint      $y,
-    ncalign_e $align,
-    Str       $format
-  ) {
-    ncplane_printf_alignedexport($!p, $y, $align, $format);
-  }
-
-  method ncplane_printf_stainedexport (
-    ncplane $n,
-    Str     $format
-  ) {
-    ncplane_printf_stainedexport($!p, $format);
-  }
-
-  method ncplane_printf_yxexport (
-    ncplane $n,
-    gint    $y,
-    gint    $x,
-    Str     $format
-  ) {
-    ncplane_printf_yxexport($!p, $y, $x, $format);
-  }
-
-  method ncplane_printfexport (
-    ncplane $n,
-    Str     $format
-  ) {
-    ncplane_printfexport($!p, $format);
   }
 
   method ncplane_putcexport (
@@ -1277,6 +1319,21 @@ class Terminal::NotCurses::Plane {
     nccell  $c
   ) {
     ncplane_vlineexport($!p, $c);
+  }
+
+  method ncplane_vprintf_aligned (
+    gint      $y,
+    ncalign_e $align,
+    Str       $format,
+  ) {
+    ncplane_vprintf_aligned($!p, $y, $align, $format, Str);
+  }
+
+  method ncplane_vprintf_stained (
+    ncplane $n,
+    Str     $format,
+  ) {
+    ncplane_vprintf_stained($!p, $format, $ap, Str);
   }
 
   method ncplane_vprintfexport (

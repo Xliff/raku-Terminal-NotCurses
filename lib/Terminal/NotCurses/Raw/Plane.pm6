@@ -42,9 +42,9 @@ sub ncplane_as_rgba (
 { * }
 
 sub ncplane_ascii_box (
-  ncplane $n,
-  uint16  $styles,
-  uint64  $channels
+  ncplane        $n,
+  CArray[uint16] $styles,
+  CArray[uint64] $channels
 )
   returns int32
   is      native(notcurses-export)
@@ -53,9 +53,9 @@ sub ncplane_ascii_box (
 { * }
 
 sub ncplane_at_cursor (
-  ncplane $n,
-  uint16  $stylemask,
-  uint64  $channels
+  ncplane        $n,
+  CArray[uint16] $stylemask,
+  CArray[uint64] $channels
 )
   returns Str
   is      native(&notcurses)
@@ -246,12 +246,14 @@ sub ncplane_destroy (ncplane $n)
 { * }
 
 sub ncplane_dim_x (ncplane $n)
+  returns uint32
   is      native(notcurses-export)
   is      export
   is      symbol('ncplane_dim_x_export')
 { * }
 
 sub ncplane_dim_y (ncplane $n)
+  returns uint32
   is      native(notcurses-export)
   is      export
   is      symbol('ncplane_dim_y_export')
@@ -267,9 +269,12 @@ sub ncplane_dim_yx (
 { * }
 
 sub ncplane_double_box_sized (
-  ncplane  $n,
-  uint16 $styles,
-  uint64 $channels
+  ncplane $n,
+  uint16  $styles,
+  uint64  $channels
+  uint32  $ylen,
+  uint32  $xlen,
+  uint32  $ctlword
 )
   returns int32
   is      native(notcurses-export)
@@ -278,9 +283,15 @@ sub ncplane_double_box_sized (
 { * }
 
 sub ncplane_double_box (
-  ncplane  $n,
-  uint16 $styles,
-  uint64 $channels
+  ncplane $n,
+  uint16  $styles,
+  uint64  $channels
+  nccell  $ul,
+  nccell  $ur,
+  nccell  $ll,
+  nccell  $lr,
+  nccell  $hl,
+  nccell  $vl
 )
   returns int32
   is      native(notcurses-export)
@@ -1275,7 +1286,7 @@ sub ncplane_set_fg_palindex (ncplane $n)
 { * }
 
 sub ncplane_set_fg_rgb (
-  ncplane $n,
+  ncplane $n,$plane
   uint32  $channel
 )
   returns int32

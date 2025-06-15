@@ -8,6 +8,44 @@ use Terminal::NotCurses::Raw::Structs;
 
 unit package Termninal::NotCurses::Raw::Plane;
 
+sub ncvisual_at_yx (
+  ncvisual $n,
+  int32    $y,
+  int32    $x,
+  uint32   $pixel
+)
+  returns int32
+  is      native(&notcurses)
+  is      export
+{ * }
+
+sub ncvisual_blit (
+  notcurses        $nc,
+  ncvisual         $ncv,
+  ncvisual_options $vopts
+)
+  returns ncplane
+  is      native(&notcurses)
+  is      export
+{ * }
+
+sub ncvisual_decode (ncvisual $nc)
+  returns  int32
+  is      native(&notcurses)
+  is      export
+{ * }
+
+sub ncvisual_decode_loop (ncvisual $nc)
+  returns int32
+  is      native(&notcurses)
+  is      export
+{ * }
+
+sub ncvisual_destroy (ncvisual $ncv)
+  is      native(&notcurses)
+  is      export
+{ * }
+
 sub ncvisual_from_bgra (
   Pointer $bgra,
   int32   $rows,
@@ -87,44 +125,6 @@ sub ncvisual_from_rgba (
 
 sub ncvisual_from_sixel (Str $s)
   returns ncvisual
-  is      native(&notcurses)
-  is      export
-{ * }
-
-sub ncvisual_at_yx (
-  ncvisual $n,
-  int32    $y,
-  int32    $x,
-  uint32   $pixel
-)
-  returns int32
-  is      native(&notcurses)
-  is      export
-{ * }
-
-sub ncvisual_blit (
-  notcurses        $nc,
-  ncvisual         $ncv,
-  ncvisual_options $vopts
-)
-  returns ncplane
-  is      native(&notcurses)
-  is      export
-{ * }
-
-sub ncvisual_decode (ncvisual $nc)
-  returns  int32
-  is      native(&notcurses)
-  is      export
-{ * }
-
-sub ncvisual_decode_loop (ncvisual $nc)
-  returns int32
-  is      native(&notcurses)
-  is      export
-{ * }
-
-sub ncvisual_destroy (ncvisual $ncv)
   is      native(&notcurses)
   is      export
 { * }

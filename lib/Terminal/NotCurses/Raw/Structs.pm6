@@ -108,32 +108,50 @@ class ncstats is repr<CStruct> is export {
   has uint32 $.planes            is rw;
 }
 
-#
-# struct ncvisual_options {
-#   struct ncplane* n;
-#   ncscale_e scaling;
-#   int y, x;
-#   unsigned begy, begx;
-#   unsigned leny, lenx;
-#   ncblitter_e blitter;
-#   uint64 flags;
-#   uint32 transcolor;
-#   unsigned pxoffy, pxoffx;
-# };
-#
-# class ncvgeom is repr<CStruct> is export {
-#   unsigned pixy, pixx;
-#   unsigned cdimy, cdimx;
-#   unsigned rpixy, rpixx;
-#   unsigned rcelly, rcellx;
-#   unsigned scaley, scalex;
-#   unsigned begy, begx;
-#   unsigned leny, lenx;
-#   unsigned maxpixely, maxpixelx;
-#   ncblitter_e blitter;
-# }
-#
-#
+
+class ncvisual_options is repr<CStruct> is export {
+  has ncplane     $!n;
+  has ncscale_e   $.scaling    is rw;
+  has int32       $.y          is rw;
+  has int32       $.x          is rw;
+  has uint32      $.begy       is rw;
+  has uint32      $.begx       is rw;
+  has uint32      $.leny       is rw;
+  has uint32      $.lenx       is rw;
+  has ncblitter_e $.blitter    is rw;
+  has uint64      $.flags      is rw;
+  has uint32      $.transcolor is rw;
+  has uint32      $.pxoffx     is rw;
+  has uint32      $.pxoffy     is rw;
+
+  method n is rw {
+    Proxy.new(
+      FETCH => -> $     { $!n },
+      STORE => -> $, \v { self.^attributes.head.set_value(self, v) }
+    )
+  }
+}
+
+class ncvgeom is repr<CStruct> is export {
+  has uint32      $.pixy      is rw;
+  has uint32      $.pixx      is rw;
+  has uint32      $.cdimy     is rw;
+  has uint32      $.cdimx     is rw;
+  has uint32      $.rpixy     is rw;
+  has uint32      $.rpixx     is rw;
+  has uint32      $.rcelly    is rw;
+  has uint32      $.rcellx    is rw;
+  has uint32      $.scaley    is rw;
+  has uint32      $.scalex    is rw;
+  has uint32      $.begy      is rw;
+  has uint32      $.begx      is rw;
+  has uint32      $.leny      is rw;
+  has uint32      $.lenx      is rw;
+  has uint32      $.maxpixely is rw;
+  has uint32      $.maxpixelx is rw;
+  has ncblitter_e $.blitter   is rw;
+}
+
 # class ncreel_options is repr<CStruct> is export {
 #   unsigned bordermask;
 #   uint64 borderchan;

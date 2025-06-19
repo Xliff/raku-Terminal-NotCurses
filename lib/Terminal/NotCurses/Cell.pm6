@@ -131,12 +131,16 @@ class Terminal::NotCurses::Cell {
     nccell_load_ucs32($n, $!c, $u);
   }
 
-  method off_styles {
-    nccell_off_styles($!c);
+  method off_styles (Int() $bits) {
+    my uint32 $b = $bits;
+
+    nccell_off_styles($!c, $b);
   }
 
-  method on_styles {
-    nccell_on_styles($!c);
+  method on_styles (Int() $bits) {
+    my uint32 $b = $bits;
+
+    nccell_on_styles($!c, $b);
   }
 
   method prime (
@@ -157,16 +161,20 @@ class Terminal::NotCurses::Cell {
     nccell_set_bchannel($!c, $c);
   }
 
-  method set_bg_alpha {
-    nccell_set_bg_alpha($!c);
+  method set_bg_alpha (Int() $val) {
+    my uint32 $v = $val;
+
+    nccell_set_bg_alpha($!c, $v);
   }
 
   method set_bg_default {
     nccell_set_bg_default($!c);
   }
 
-  method set_bg_palindex {
-    nccell_set_bg_palindex($!c);
+  method set_bg_palindex (Int() $val) {
+    my uint32 $v = $val;
+
+    nccell_set_bg_palindex($!c, $v);
   }
 
   method set_bg_rgb8_clipped (Int() $r, Int() $g, Int() $b) {
@@ -197,16 +205,20 @@ class Terminal::NotCurses::Cell {
     nccell_set_fchannel($!c, $c);
   }
 
-  method set_fg_alpha {
-    nccell_set_fg_alpha($!c);
+  method set_fg_alpha (Int() $val) {
+    my uint32 $v = $val;
+
+    nccell_set_fg_alpha($!c, $v);
   }
 
-  method set_fg_default{
+  method set_fg_default {
     nccell_set_fg_default($!c);
   }
 
-  method set_fg_palindex  {
-    nccell_set_fg_palindex($!c);
+  method set_fg_palindex (Int() $val) {
+    my uint32 $v = $val;
+
+    nccell_set_fg_palindex($!c, $v);
   }
 
   method set_fg_rgb8_clipped (Int() $r, Int() $g, Int() $b) {
@@ -219,14 +231,16 @@ class Terminal::NotCurses::Cell {
     nccell_set_fg_rgb8($!c);
   }
 
-  method set_fg_rgb (Int() $channelS) {
+  method set_fg_rgb (Int() $channel) {
     my uint32 $c = $channel;
 
     nccell_set_fg_rgb($!c, $channel);
   }
 
-  method set_styles {
-    nccell_set_styles($!c);
+  method set_styles (Int() $bits) {
+    my uint32 $b = $bits;
+
+    nccell_set_styles($!c, $b);
   }
 
   method strdup (ncplane() $n) {

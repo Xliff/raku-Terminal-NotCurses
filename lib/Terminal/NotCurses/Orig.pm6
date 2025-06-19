@@ -851,73 +851,6 @@
     ncuplot_set_sample($n, $x, $y);
   }
 
-  method ncvisual_from_bgra (
-    Pointer $bgra,
-    gint    $rows,
-    gint    $rowstride,
-    gint    $cols
-  ) {
-    ncvisual_from_bgra($bgra, $rows, $rowstride, $cols);
-  }
-
-  method ncvisual_from_file (Str $file) {
-    ncvisual_from_file($file);
-  }
-
-  method ncvisual_from_palidx (
-    Pointer  $data,
-    gint     $rows,
-    gint     $rowstride,
-    gint     $cols,
-    gint     $palsize,
-    gint     $pstride,
-    uint32_t $palette
-  ) {
-    ncvisual_from_palidx($data, $rows, $rowstride, $cols, $palsize, $pstride, $palette);
-  }
-
-  method ncvisual_from_plane (
-    ncplane     $n,
-    ncblitter_e $blit,
-    gint        $begy,
-    gint        $begx
-  ) {
-    ncvisual_from_plane($n, $blit, $begy, $begx);
-  }
-
-  method ncvisual_from_rgb_loose (
-    Pointer $rgba,
-    gint    $rows,
-    gint    $rowstride,
-    gint    $cols,
-    gint    $alpha
-  ) {
-    ncvisual_from_rgb_loose($rgba, $rows, $rowstride, $cols, $alpha);
-  }
-
-  method ncvisual_from_rgb_packed (
-    Pointer $rgba,
-    gint    $rows,
-    gint    $rowstride,
-    gint    $cols,
-    gint    $alpha
-  ) {
-    ncvisual_from_rgb_packed($rgba, $rows, $rowstride, $cols, $alpha);
-  }
-
-  method ncvisual_from_rgba (
-    Pointer $rgba,
-    gint    $rows,
-    gint    $rowstride,
-    gint    $cols
-  ) {
-    ncvisual_from_rgba($rgba, $rows, $rowstride, $cols);
-  }
-
-  method ncvisual_from_sixel (Str $s) {
-    ncvisual_from_sixel($s);
-  }
-
   method notcurses_accountname {
     notcurses_accountname();
   }
@@ -993,4 +926,3 @@
   ) {
     notcurses_version_components($major, $minor, $patch, $tweak);
   }
-

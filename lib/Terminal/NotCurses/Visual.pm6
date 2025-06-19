@@ -7,7 +7,7 @@ use Terminal::NotCurses::Raw::Definitions;
 use Terminal::NotCurses::Raw::Enums;
 use Terminal::NotCurses::Raw::Structs;
 
-use Terminal::NotCurses::Raw::Plane;
+use Terminal::NotCurses::Raw::Visual;
 
 class Terminal::NotCurses::Visual {
   has ncvisual $!v;
@@ -15,179 +15,227 @@ class Terminal::NotCurses::Visual {
   submethod BUILD ( :visual(:$!v) ) { }
 
   method Terminal::NotCurses::Raw::Definitions::ncvisual
-  { $!p }
+  { $!v }
 
-  method new (ncvisual $plane) {
-    $plane ?? self.bless( :$plane ) !! Nil;
+  method new (ncvisual $visual) {
+    $visual ?? self.bless( :$visual ) !! Nil;
   }
 
-  method ncvisual_from_bgra (
-    Pointer $bgra,
-    gint    $rows,
-    gint    $rowstride,
-    gint    $cols
+  proto method from_bgra (|)
+  { * }
+
+  multi method from_bgra (@data, $rows, $rowstride, $cols) {
+    samewith(ArrayToCArray(@data), $rows, $rowstride);
+  }
+  multi method from_bgra (
+    CArray[uint32] $bgra,
+    Int()          $rows,
+    Int()          $rowstride,
+    Int()          $cols
   ) {
-    ncvisual_from_bgra($bgra, $rows, $rowstride, $cols);
+    my int32 ($r, $rs, $c) = ($rows, $rowstride, $cols);
+
+    my $visual = ncvisual_from_bgra($bgra, $r, $rs, $c);
+
+    $visual ?? self.bless( :$visual ) !! Nil
   }
 
-  method ncvisual_from_file (Str $file) {
-    ncvisual_from_file($file);
+  method ncvisual_from_file (Str() $file) {
+    my $visual = ncvisual_from_file($file);
+
+    $visual ?? self.bless( :$visual ) !! Nil
   }
 
   method ncvisual_from_palidx (
-    Pointer  $data,
-    gint     $rows,
-    gint     $rowstride,
-    gint     $cols,
-    gint     $palsize,
-    gint     $pstride,
-    uint32_t $palette
+    CArray[uint8]  $data,
+    Int()          $rows,
+    Int()          $rowstride,
+    Int()          $cols,
+    Int()          $palsize,
+    Int()          $pstride,
+    CArray[uint32] $palette
   ) {
-    ncvisual_from_palidx($data, $rows, $rowstride, $cols, $palsize, $pstride, $palette);
+    my int32 ($r, $rs, $c, $p, $ps) =
+      ($rows, $rowstride, $cols, $palsize, $pstride);
+
+    my $visual = ncvisual_from_palidx($data, $r, $rs, $c, $p, $ps);
+
+    $visual ?? self.bless( :$visual ) !! Nil
   }
 
-  method ncvisual_from_plane (
-    ncplane     $n,
-    ncblitter_e $blit,
-    gint        $begy,
-    gint        $begx
+  method from_plane (
+    ncplane() $n,
+    Int()     $blit,
+    Int()     $begy,
+    Int()     $begx
   ) {
-    ncvisual_from_plane($n, $blit, $begy, $begx);
+    my ncblitter_e $b = $blit;
+
+    my int32 ($y, $x) = ($begy, $begx);
+
+    my $visual = ncvisual_from_plane($n, $b, $y, $x);
+
+    $visual ?? self.bless( :$visual ) !! Nil
   }
 
-  method ncvisual_from_rgb_loose (
-    Pointer $rgba,
-    gint    $rows,
-    gint    $rowstride,
-    gint    $cols,
-    gint    $alpha
+  proto method ncvisual_from_rgb_loose (|)
+  { * }
+
+  multi method ncvisual_from_rgb_loose (
+    @rgba,
+    $rows,
+    $rowstride,
+    $cols,
+    $alpha
   ) {
-    ncvisual_from_rgb_loose($rgba, $rows, $rowstride, $cols, $alpha);
+    samewith(
+      ArrayToCArray(uint8, @rgba),
+      $rows,
+      $rowstride,
+      $cols,
+      $alpha
+    );
+  }
+  multi method ncvisual_from_rgb_loose (
+    CArray[uint8] $rgba,
+    Int()         $rows,
+    Int()         $rowstride,
+    Int()         $cols,
+    Int()         $alpha
+  ) {
+    my int32 ($r, $rs, $c, $a) = ($rows, $rowstride, $cols, $alpha);
+
+    my $visual = ncvisual_from_rgb_loose($rgba, $r, $rs, $c, $a);
+
+    $visual ?? self.bless( :$visual ) !! Nil
   }
 
   method ncvisual_from_rgb_packed (
-    Pointer $rgba,
-    gint    $rows,
-    gint    $rowstride,
-    gint    $cols,
-    gint    $alpha
+    CArray[uint8] $rgba,
+    Int()         $rows,
+    Int()         $rowstride,
+    Int()         $cols,
+    Int()         $alpha
   ) {
-    ncvisual_from_rgb_packed($rgba, $rows, $rowstride, $cols, $alpha);
+    my int32 ($r, $rs, $c, $a) = ($rows, $rowstride, $cols, $alpha);
+
+    my $visual = ncvisual_from_rgb_packed($rgba, $r, $rs, $c, $a);
+
+    $visual ?? self.bless( :$visual ) !! Nil
   }
 
-  method ncvisual_from_rgba (
-    Pointer $rgba,
-    gint    $rows,
-    gint    $rowstride,
-    gint    $cols
+  proto method from_rgba (|)
+  { * }
+
+  multi method from_rgba (@data, $rows, $rowstride, $cols) {
+    samewith( ArrayToCArray(uint32, $rows, $rowstride, $cols) );
+  }
+  multi method from_rgba (
+    CArray[uint32] $rgba,
+    Int()          $rows,
+    Int()          $rowstride,
+    Int()          $cols
   ) {
-    ncvisual_from_rgba($rgba, $rows, $rowstride, $cols);
+    my int32 ($r, $rs, $c) = ($rows, $rowstride, $cols);
+
+    my $visual = ncvisual_from_rgba($rgba, $r, $rs, $c);
+
+    $visual ?? self.bless( :$visual ) !! Nil
   }
 
-  method ncvisual_from_sixel (Str $s) {
-    ncvisual_from_sixel($s);
+  method from_sixel (Str() $s) {
+    my $visual = ncvisual_from_sixel($s);
+
+    $visual ?? self.bless( :$visual ) !! Nil
   }
 
-  method ncvisual_at_yx (
-    ncvisual $n,
-    gint     $y,
-    gint     $x,
-    uint32_t $pixel
+  proto method at_yx (|)
+  { * }
+
+  multi method at_yx ($y, $x) {
+    samewith($y, $x, $);
+  }
+  multi method at_yx (Int() $y, Int() $x, $pixel is rw) {
+    my int32  ($yy, $xx) = ($y, $x);
+    my uint32  $p        =  0;
+
+    my $rv = ncvisual_at_yx($!v, $y, $x, $p);
+
+    $rv ?? ($pixel = $p) !! Nil;
+  }
+
+  method blit (notcurses() $nc, ncvisual_options() $vopts) {
+    ncvisual_blit($nc, $!v, $vopts);
+  }
+
+  method decode {
+    ncvisual_decode($!v);
+  }
+
+  method decode_loop {
+    ncvisual_decode_loop($!v);
+  }
+
+  method destroy {
+    ncvisual_destroy($!v);
+  }
+
+  method geom (notcurses() $nc, ncvisual_options() $vopts, ncvgeom() $geom) {
+    ncvisual_geom($!v, $nc, $vopts, $geom);
+  }
+
+  method media_defblitter (Int() $scale) {
+    my ncscale_e $s = $scale;
+
+    ncvisual_media_defblitter($!v, $s);
+  }
+
+  method polyfill_yx (Int() $y, Int() $x, Int() $rgba) {
+    my int32   ($yy, $xx) = ($y, $x);
+    my uint32  $r        =  $rgba;
+
+    ncvisual_polyfill_yx($!v, $yy, $xx, $r);
+  }
+
+  method resize (Int() $rows, Int() $cols) {
+    my int32   ($r, $c) = ($rows, $cols);
+
+    ncvisual_resize($!v, $rows, $cols);
+  }
+
+  method resize_noninterpolative (Int() $rows, Int() $cols) {
+    my int32   ($r, $c) = ($rows, $cols);
+
+    ncvisual_resize_noninterpolative($!v, $rows, $cols);
+  }
+
+  method rotate (Num() $rads) {
+    my num32 $r = $rads;
+
+    ncvisual_rotate($!v, $r);
+  }
+
+  method set_yx (Int() $y, Int() $x, Int() $pixel) {
+    my int32   ($yy, $xx) = ($y, $x);
+    my uint32  $p        =   $pixel;
+
+    ncvisual_set_yx($!v, $yy, $xx, $pixel);
+  }
+
+  method stream (
+    notcurses()        $nc,
+    Num()              $timescale,
+                       &streamer,
+    ncvisual_options() $vopts,
+    Pointer            $curry
   ) {
-    ncvisual_at_yx($n, $y, $x, $pixel);
+    my num32 $t = $timescale;
+
+    ncvisual_stream($nc, $!v, $t, &streamer, $vopts, $curry);
   }
 
-  method ncvisual_blit (
-    notcurses        $nc,
-    ncvisual         $ncv,
-    ncvisual_options $vopts
-  ) {
-    ncvisual_blit($nc, $ncv, $vopts);
+  method subtitle_plane (ncplane() $parent) {
+    ncvisual_subtitle_plane($parent, $!v);
   }
 
-  method ncvisual_decode (ncvisual $nc) {
-    ncvisual_decode($nc);
-  }
-
-  method ncvisual_decode_loop (ncvisual $nc) {
-    ncvisual_decode_loop($nc);
-  }
-
-  method ncvisual_destroy (ncvisual $ncv) {
-    ncvisual_destroy($ncv);
-  }
-
-  method ncvisual_geom (
-    notcurses        $nc,
-    ncvisual         $n,
-    ncvisual_options $vopts,
-    ncvgeom          $geom
-  ) {
-    ncvisual_geom($nc, $n, $vopts, $geom);
-  }
-
-  method ncvisual_media_defblitter (
-    notcurses $nc,
-    ncscale_e $scale
-  ) {
-    ncvisual_media_defblitter($nc, $scale);
-  }
-
-  method ncvisual_polyfill_yx (
-    ncvisual $n,
-    gint     $y,
-    gint     $x,
-    uint32_t $rgba
-  ) {
-    ncvisual_polyfill_yx($n, $y, $x, $rgba);
-  }
-
-  method ncvisual_resize (
-    ncvisual $n,
-    gint     $rows,
-    gint     $cols
-  ) {
-    ncvisual_resize($n, $rows, $cols);
-  }
-
-  method ncvisual_resize_noninterpolative (
-    ncvisual $n,
-    gint     $rows,
-    gint     $cols
-  ) {
-    ncvisual_resize_noninterpolative($n, $rows, $cols);
-  }
-
-  method ncvisual_rotate (
-    ncvisual $n,
-    gdouble  $rads
-  ) {
-    ncvisual_rotate($n, $rads);
-  }
-
-  method ncvisual_set_yx (
-    ncvisual $n,
-    gint     $y,
-    gint     $x,
-    uint32_t $pixel
-  ) {
-    ncvisual_set_yx($n, $y, $x, $pixel);
-  }
-
-  method ncvisual_stream (
-    notcurses        $nc,
-    ncvisual         $ncv,
-    gfloat           $timescale,
-    ncstreamcb       $streamer,
-    ncvisual_options $vopts,
-    Pointer          $curry
-  ) {
-    ncvisual_stream($nc, $ncv, $timescale, $streamer, $vopts, $curry);
-  }
-
-  method ncvisual_subtitle_plane (
-    ncplane  $parent,
-    ncvisual $ncv
-  ) {
-    ncvisual_subtitle_plane($parent, $ncv);
-  }
+}

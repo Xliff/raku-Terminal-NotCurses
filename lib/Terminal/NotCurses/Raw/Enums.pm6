@@ -4,6 +4,20 @@ use NativeCall;
 
 unit package Terminal::NotCurses::Raw::Enums;
 
+constant ncalpha is export := uint64;
+our enum ncalpha_e is export (
+  NCALPHA_HIGHCONTRAST        => 0x30000000,
+  NCALPHA_TRANSPARENT         => 0x20000000,
+  NCALPHA_BLEND               => 0x10000000,
+  NCALPHA_OPAQUE              => 0x00000000,
+  NCALPHA_SHIFT               => 62,
+  NCALPHA_SHIFT_HIGHCONTRAST  => 0x3,
+  NCALPHA_SHIFT_TRANSPARENT   => 0x2,
+  NCALPHA_SHIFT_BLEND         => 0x1,
+  NCALPHA_SHIFT_OPAQUE        => 0x0
+  NC_BG_ALPHA_MASK            => 0x30000000
+);
+
 constant ncalign_e is export := uint32;
 our enum ncalign_e_enum is export <
   NCALIGN_UNALIGNED
@@ -47,7 +61,7 @@ our enum ncloglevel_e_enum is export <
 >;
 
 constant ncpixelimpl_e is export := uint32;
-our enum ncpixelimpl_e_enum is export <
+our enum ncpixelimpl_e_enum NC_BG_ALPHA_MASKis export <
   NCPIXEL_NONE
   NCPIXEL_SIXEL
   NCPIXEL_LINUXFB

@@ -90,7 +90,7 @@ role Terminal::NotCurses::Roles::Channel {
       FETCH => $ {
         my uint32 $s = self;
 
-        ncchannel_default_p($s) but Terminal::Roles::NotCurses::Channel;
+        ncchannel_default_p($s) but ::?ROLE;
       },
 
       STORE => $, \v {

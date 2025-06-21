@@ -1,15 +1,15 @@
 
-#include <time.h>             
-#include <ctype.h>            
-#include <wchar.h>            
-#include <stdio.h>            
-#include <stdint.h>           
-#include <stdlib.h>           
-#include <stdarg.h>           
-#include <string.h>           
-#include <signal.h>           
-#include <limits.h>           
-#include <stdbool.h>          
+#include <time.h>
+#include <ctype.h>
+#include <wchar.h>
+#include <stdio.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <stdarg.h>
+#include <string.h>
+#include <signal.h>
+#include <limits.h>
+#include <stdbool.h>
 #include <notcurses/notcurses.h>
 
  unsigned
@@ -656,6 +656,10 @@ notcurses_get_nblock_export (struct notcurses* n, ncinput* ni){
  uint32_t
 notcurses_get_blocking_export (struct notcurses* n, ncinput* ni){
   return notcurses_get(n, NULL, ni);
+}
+
+ncinput *ncinput_create (void) {
+  return (ncinput *)malloc( sizeof(ncinput) );
 }
 
  bool
@@ -1666,4 +1670,3 @@ nctabbed_sepchan_export (struct nctabbed* nt){
   nctabbed_channels(nt, NULL, NULL, &ch);
   return ch;
 }
-

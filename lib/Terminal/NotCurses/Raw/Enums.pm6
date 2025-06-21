@@ -14,7 +14,7 @@ our enum ncalpha_e is export (
   NCALPHA_SHIFT_HIGHCONTRAST  => 0x3,
   NCALPHA_SHIFT_TRANSPARENT   => 0x2,
   NCALPHA_SHIFT_BLEND         => 0x1,
-  NCALPHA_SHIFT_OPAQUE        => 0x0
+  NCALPHA_SHIFT_OPAQUE        => 0x0,
   NC_BG_ALPHA_MASK            => 0x30000000
 );
 

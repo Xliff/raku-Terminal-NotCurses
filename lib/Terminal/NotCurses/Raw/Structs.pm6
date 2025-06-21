@@ -40,6 +40,43 @@ class ncinput is repr<CStruct> is export {
   has int32         $.xpx       is rw;
 }
 
+class ncmenu_item is repr<CStruct> is export {
+  has Str     $.desc;
+  HAS ncinput $.shortcut;
+}
+
+class ncmenu_section is repr<CStruct> is export {
+  has Str     $!name     ;
+  has int32   $.itemcount;
+  has Pointer $!items    ; #= @[ncmenu_item]
+  HAS ncinput $.shortcut ;
+
+  method name is rw {
+    Proxy.new:
+      FETCH => -> $           { $!name },
+      STORE => -> $, Str() $v { self.^attributes.head.set_value(self, $v); }
+  }
+
+  method items is rw {
+    Proxy.new:
+      FETCH => -> $           { $!items },
+
+      STORE => -> $, $v {
+        my $vv = $v;
+        # cw: -YYY- PROPERLY handle $vv
+        self.^attributes[2].set_value(self, $vv);
+      }
+  }
+}
+
+class ncmenu_options is repr<CStruct> is export {
+  has Pointer $!sections             ; #= @[ncmenu_section]
+  has int32   $.sectioncount         ;
+  has uint64  $.headerchannels  is rw;
+  has uint64  $.sectionchannels is rw;
+  has uint64  $.flags           is rw;
+}
+
 class ncplane_options is repr<CStruct> is export {
   has int      $.y         is rw;
   has int      $.x         is rw;

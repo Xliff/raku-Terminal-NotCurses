@@ -2,11 +2,40 @@ use v6;
 
 use Terminal::NotCurses::Raw::Channel;
 
-role Terminal::NotCurses::Roles::Channel {
+class Terminal::NotCurses::Channel {
+  has CArray[uint32] $!c;
 
-  X::Proto::InvalidType.new(
-    message => 'Terminal::Notcurses::Roles::Channel is only for Ints!'
-  ).throw unless self ~~
+  submethod BUILD ( :channel(:$c ) {
+    given $c {
+      when CArray[uint32] { $!c = $_;           }
+
+      $!c = CArray[uint32].allocate(1);
+
+      when .^can('Int')   { $_ .= Int; proceed; }
+      when Int | uint32   { $!c[0] = $_         }
+
+      default {
+        X::Proto::InvalidType.new(
+          message =>
+            "A channel must be given uint32-compatible value on creation, {
+              ''}not a { .^name }"
+        ).throw;
+      }
+
+    }
+  }
+
+  method Int { $!c[0] }
+
+  method Terminal::NotCurses::Raw::Definitions::ncchannel {
+    $!c
+  }
+
+  method new (Int() $c) {
+    return Nil unless $c.defined;
+
+    self.bless( :$c )
+  }
 
   multi method a ( :$shift = True )  is rw {
     return Nil unless ncchannel_a_p(self);
@@ -24,7 +53,7 @@ role Terminal::NotCurses::Roles::Channel {
           (v +< ( $shift ?? NCALPHA_SHIFT !! 0 )) +& NC_BG_ALPHA_MASH);
 
         ncchannel_set_a($s, $vv);
-        $s[0] but ::?ROLE;
+        self
       }
   }
 
@@ -41,48 +70,48 @@ role Terminal::NotCurses::Roles::Channel {
         my uint32         $vv = v;
 
         ncchannel_set_palindex($s, $vv)
-        $s[0] but ::?ROLE;
+        self
       };
   }
 
   method b is rw {
     Proxy.new:
-      FETCH => -> $      { ncchannel_b(self)       but ::?ROLE },
-      STORE => -> $, \v  { ::?CLASS.set_b(self, v) but ::?ROLE }
+      FETCH => -> $      { ncchannel_b(self)       },
+      STORE => -> $, \v  { ::?CLASS.set_b(self, v) }
   }
 
   method g is rw {
     Proxy.new:
-      FETCH => -> $      { ncchannel_g(self)       but ::?ROLE },
-      STORE => -> $, \v  { ::?CLASS.set_g(self, v) but ::?ROLE }
+      FETCH => -> $      { ncchannel_g(self)       },
+      STORE => -> $, \v  { ::?CLASS.set_g(self, v) }
   }
 
   method r is rw {
     Proxy.new:
-      FETCH => -> $      { ncchannel_r(self)       but ::?ROLE },
-      STORE => -> $, \v  { ::?CLASS.set_r(self, v) but ::?ROLE }
+      FETCH => -> $      { ncchannel_r(self)       },
+      STORE => -> $, \v  { ::?CLASS.set_r(self, v) }
   }
 
   method b-offset {
     Proxy.new:
-      FETCH => -> $      { ncchannel_b(self)             but ::?ROLE },
-      STORE => -> $, \v  { ::?CLASS.set_b(self, $.r + v) but ::?ROLE }
+      FETCH => -> $      { ncchannel_b(self)             },
+      STORE => -> $, \v  { ::?CLASS.set_b(self, $.r + v) }
   }
 
   method g-offset {
     Proxy.new:
-      FETCH => -> $      { ncchannel_g(self)             but ::?ROLE },
-      STORE => -> $, \v  { ::?CLASS.set_g(self, $.g + v) but ::?ROLE }
+      FETCH => -> $      { ncchannel_g(self)             },
+      STORE => -> $, \v  { ::?CLASS.set_g(self, $.g + v) }
   }
 
   method r-offset {
     Proxy.new:
-      FETCH => -> $      { ncchannel_r(self)             but ::?ROLE },
-      STORE => -> $, \v  { ::?CLASS.set_r(self, $.r + v) but ::?ROLE }
+      FETCH => -> $      { ncchannel_r(self)              },
+      STORE => -> $, \v  { ::?CLASS.set_r(self, $.r + v)  }
   }
 
   method rgb8 {
-    ncchannel_rgb8(self) but ::?ROLE;
+    ncchannel_rgb8(self);
   }
 
   method default {
@@ -90,7 +119,7 @@ role Terminal::NotCurses::Roles::Channel {
       FETCH => $ {
         my uint32 $s = self;
 
-        ncchannel_default_p($s) but ::?ROLE;
+        ncchannel_default_p($s);
       },
 
       STORE => $, \v {
@@ -98,7 +127,6 @@ role Terminal::NotCurses::Roles::Channel {
         my uint32         $vv = v;
 
         ncchannel_set_default($s, $vv);
-        $s[0] but ::?ROLE;
       }
   }
 
@@ -108,7 +136,7 @@ role Terminal::NotCurses::Roles::Channel {
     my $ca = newCArray(uint32, first => $s);
 
     nchannel_set_palindex($ca, $v);
-    $s[0] but ::?ROLE;
+    self
   }
 
   method set_r (Int() $s, Int() $vv) is static {
@@ -117,7 +145,7 @@ role Terminal::NotCurses::Roles::Channel {
     my $ca = newCArray(uint32, first => self);
 
     nchannel_set_rgb8_clipped($s, $v, $s.g, $s.b);
-    $s[0]
+    self
   }
 
   method set_g (Int() $s, Int() $vv) is static {
@@ -126,7 +154,7 @@ role Terminal::NotCurses::Roles::Channel {
     my $ca = newCArray(uint32, first => $s);
 
     nchannel_set_rgb8_clipped($s, $s.r, $v, $s.b);
-    $s[0]
+    self;
   }
 
   method set_b (Int() $s, Int() $vv) is static {
@@ -135,7 +163,7 @@ role Terminal::NotCurses::Roles::Channel {
     my $ca = newCArray(uint32, first => $s);
 
     nchannel_set_rgb8_clipped($s, $s.r, $s.g, $vv);
-    $s[0]
+    self
   }
 
   method set_rgb8 (Int() $s, Int() $r, Int() $g, Int() $b) is static {
@@ -144,17 +172,9 @@ role Terminal::NotCurses::Roles::Channel {
     my $ca = newCArray(uint32, first => $s);
 
     nchannel_set_rgb8_clipped($s, $rr, $gg, $bb);
-    $s[0]
+    self;
   }
 
-}
-
-class Terminal::NotCurses::Channel {
-  does Terminal::NotCurses::Roles::Channel;
-
-  method new (Int() $v) {
-    $v but Terminal::NotCurses::Roles::Channel;
-  }
 }
 
 sub EXPORT ( $channel-name? ) {

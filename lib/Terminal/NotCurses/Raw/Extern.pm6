@@ -30,68 +30,7 @@ unit package Terminal::NotCurses::Raw::Extern;
 #
 
 #
-# sub ncinput_alt_pexport (ncinput $n)
-#   returns bool
-#   is      native(&notcurses)
-#   is      export
-# { * }
-#
-# sub ncinput_capslock_pexport (ncinput $n)
-#   returns bool
-#   is      native(&notcurses)
-#   is      export
-# { * }
-#
-# sub ncinput_ctrl_pexport (ncinput $n)
-#   returns bool
-#   is      native(&notcurses)
-#   is      export
-# { * }
-#
-# sub ncinput_equal_pexport (
-#   ncinput $n1,
-#   ncinput $n2
-# )
-#   returns bool
-#   is      native(&notcurses)
-#   is      export
-# { * }
-#
-# sub ncinput_hyper_pexport (ncinput $n)
-#   returns bool
-#   is      native(&notcurses)
-#   is      export
-# { * }
-#
-# sub ncinput_meta_pexport (ncinput $n)
-#   returns bool
-#   is      native(&notcurses)
-#   is      export
-# { * }
-#
-# sub ncinput_nomod_pexport (ncinput $ni)
-#   returns bool
-#   is      native(&notcurses)
-#   is      export
-# { * }
-#
-# sub ncinput_numlock_pexport (ncinput $n)
-#   returns bool
-#   is      native(&notcurses)
-#   is      export
-# { * }
-#
-# sub ncinput_shift_pexport (ncinput $n)
-#   returns bool
-#   is      native(&notcurses)
-#   is      export
-# { * }
-#
-# sub ncinput_super_pexport (ncinput $n)
-#   returns bool
-#   is      native(&notcurses)
-#   is      export
-# { * }
+
 #
 # sub nciprefixexport (
 #   uintmax_t $val,

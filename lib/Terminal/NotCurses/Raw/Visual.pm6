@@ -140,10 +140,7 @@ sub ncvisual_geom (
   is      export
 { * }
 
-sub ncvisual_media_defblitter (
-  notcurses $nc,
-  ncscale_e $scale
-)
+sub ncvisual_media_defblitter (notcurses $nc, ncscale_e $scale)
   returns ncblitter_e
   is      native(&notcurses)
   is      export
@@ -180,10 +177,7 @@ sub ncvisual_resize_noninterpolative (
   is      export
 { * }
 
-sub ncvisual_rotate (
-  ncvisual $n,
-  num64    $rads
-)
+sub ncvisual_rotate (ncvisual $n, num64 $rads)
   returns int32
   is      native(&notcurses)
   is      export
@@ -218,10 +212,7 @@ sub ncvisual_stream (
   is      export
 { * }
 
-sub ncvisual_subtitle_plane (
-  ncplane  $parent,
-  ncvisual $ncv
-)
+sub ncvisual_subtitle_plane (ncplane $parent, ncvisual $ncv)
   returns ncplane
   is      native(&notcurses)
   is      export

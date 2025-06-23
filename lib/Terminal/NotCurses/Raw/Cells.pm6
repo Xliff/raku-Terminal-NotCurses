@@ -19,7 +19,7 @@ sub nccells_ascii_box (
   nccell   $vl
 )
   returns int32
-  is      native(&notcurses)
+  is      native(notcurses-export)
   is      export
   is      symbol('nccells_ascii_box_export')
 { * }
@@ -36,7 +36,7 @@ sub nccells_double_box (
   nccell   $vl
 )
   returns int32
-  is      native(&notcurses)
+  is      native(notcurses-export)
   is      export
   is      symbol('nccells_double_box_export')
 { * }
@@ -53,7 +53,7 @@ sub nccells_heavy_box (
   nccell   $vl
 )
   returns int32
-  is      native(&notcurses)
+  is      native(notcurses-export)
   is      export
   is      symbol('nccells_heavy_box_export')
 { * }
@@ -70,7 +70,7 @@ sub nccells_light_box (
   nccell   $vl
 )
   returns int32
-  is      native(&notcurses)
+  is      native(notcurses-export)
   is      export
   is      symbol('nccells_light_box_export')
 { * }
@@ -88,7 +88,7 @@ sub nccells_load_box (
   Str      $gclusters
 )
   returns int32
-  is      native(&notcurses)
+  is      native(notcurses-export)
   is      export
   is      symbol('nccells_load_box_export')
 { * }
@@ -105,7 +105,7 @@ sub nccells_rounded_box (
   nccell   $vl
 )
   returns int32
-  is      native(&notcurses)
+  is      native(notcurses-export)
   is      export
   is      symbol('nccells_rounded_box_export')
 { * }

@@ -103,104 +103,7 @@ unit package Termninal::NotCurses::Raw::Orig;
 #   is      export
 # { * }
 #
-# sub ncmenu_create (
-#   ncplane        $n,
-#   ncmenu_options $opts
-# )
-#   returns ncmenu
-#   is      native(notcurses)
-#   is      export
-# { * }
-#
-# sub ncmenu_destroy (ncmenu $n)
-#   is      native(notcurses)
-#   is      export
-# { * }
-#
-# sub ncmenu_item_set_status (
-#   ncmenu $n,
-#   Str    $section,
-#   Str    $item,
-#   bool   $enabled
-# )
-#   returns gint
-#   is      native(notcurses)
-#   is      export
-# { * }
-#
-# sub ncmenu_mouse_selected (
-#   ncmenu  $n,
-#   ncinput $click,
-#   ncinput $ni
-# )
-#   returns Str
-#   is      native(notcurses)
-#   is      export
-# { * }
-#
-# sub ncmenu_nextitem (ncmenu $n)
-#   returns gint
-#   is      native(notcurses)
-#   is      export
-# { * }
-#
-# sub ncmenu_nextsection (ncmenu $n)
-#   returns gint
-#   is      native(notcurses)
-#   is      export
-# { * }
-#
-# sub ncmenu_offer_input (
-#   ncmenu  $n,
-#   ncinput $nc
-# )
-#   returns bool
-#   is      native(notcurses)
-#   is      export
-# { * }
-#
-# sub ncmenu_plane (ncmenu $n)
-#   returns ncplane
-#   is      native(notcurses)
-#   is      export
-# { * }
-#
-# sub ncmenu_previtem (ncmenu $n)
-#   returns gint
-#   is      native(notcurses)
-#   is      export
-# { * }
-#
-# sub ncmenu_prevsection (ncmenu $n)
-#   returns gint
-#   is      native(notcurses)
-#   is      export
-# { * }
-#
-# sub ncmenu_rollup (ncmenu $n)
-#   returns gint
-#   is      native(notcurses)
-#   is      export
-# { * }
-#
-# sub ncmenu_selected (
-#   ncmenu  $n,
-#   ncinput $ni
-# )
-#   returns Str
-#   is      native(notcurses)
-#   is      export
-# { * }
-#
-# sub ncmenu_unroll (
-#   ncmenu $n,
-#   gint   $sectionidx
-# )
-#   returns gint
-#   is      native(notcurses)
-#   is      export
-# { * }
-#
+
 
 #
 # sub ncprogbar_create (
@@ -877,7 +780,7 @@ sub notcurses_core_init (notcurses_options $opts, Pointer $fp)
 { * }
 
 
-sub notcurses_stop (notcurses) 
+sub notcurses_stop (notcurses)
   returns int32
   is      native(&notcurses)
   is      export

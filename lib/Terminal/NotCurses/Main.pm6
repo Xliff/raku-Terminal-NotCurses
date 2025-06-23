@@ -2,11 +2,17 @@ use v6.c;
 
 use NativeCall;
 
+use Terminal::NotCurses::Raw::Types;
 use Terminal::NotCurses::Raw::Orig;
-use Terminal::NotCurses::Raw::Enums;
-use Terminal::NotCurses::Raw::Structs;
+use Terminal::NotCurses::Raw::Extern;
+
+use Terminal::NotCurses::Plane;
 
 class Terminal::NotCurses::Main {
+  my $NC;
+
+  method Terminal::NotCurses::Raw::Definition::notcurses
+  { $NC }
 
   method init (
     :$term       = Str,
@@ -31,9 +37,22 @@ class Terminal::NotCurses::Main {
       :$flags
     );
 
-    my $nc = notcurses_core_init($o, Pointer);
-    END { notcurses_stop($nc) }
-    $nc;
+    $NC = notcurses_core_init($o, Pointer);
+    END { notcurses_stop($NC) }
+
+    self.bless;
+  }
+
+  method stdplane ( :$raw = False ) {
+    propReturnObject(
+      notcurses_stdplane($NC),
+      $raw,
+      |Terminal::NotCurses::Plane.getTypePair
+    );
+  }
+
+  method render {
+    notcurses_render($NC);
   }
 
 }

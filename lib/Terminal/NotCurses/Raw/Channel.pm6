@@ -58,9 +58,9 @@ sub ncchannel_r (uint32 $channel)
 
 sub ncchannel_rgb8 (
   uint32 $channel,
-  int32  $r        is rw,
-  int32  $g        is rw,
-  int32  $b        is rw
+  uint32  $r        is rw,
+  uint32  $g        is rw,
+  uint32  $b        is rw
 )
   returns uint32
   is      native(notcurses-export)
@@ -75,7 +75,7 @@ sub ncchannel_rgb_p (uint32 $channel)
   is      symbol('ncchannel_rgb_p_export')
 { * }
 
-sub ncchannel_set_alpha (CArray[uint32] $channel)
+sub ncchannel_set_alpha (CArray[uint32] $channel, uint32 $a)
   returns int32
   is      native(notcurses-export)
   is      export
@@ -83,9 +83,10 @@ sub ncchannel_set_alpha (CArray[uint32] $channel)
 { * }
 
 sub ncchannel_set_default (CArray[uint32] $channel)
-  returns uint32
+  returns int32
   is      native(&notcurses)
   is      export
+{ * }
 
 sub ncchannel_set_rgb8 (
   CArray[uint32] $channel,
@@ -99,7 +100,7 @@ sub ncchannel_set_rgb8 (
 { * }
 
 sub ncchannel_set_rgb8_clipped (
-  CArray[uint32] $channel
+  CArray[uint32] $channel,
   int32          $r,
   int32          $g,
   int32          $b

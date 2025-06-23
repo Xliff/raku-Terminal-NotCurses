@@ -1,9 +1,16 @@
 use v6;
 
+use NativeCall;
+
+use Terminal::NotCurses::Raw::Types;
 use Terminal::NotCurses::Raw::Channel;
 
+use Proto::Roles::Implementor;
+
 class Terminal::NotCurses::Channel {
-  has CArray[uint32] $!c;
+  also does Proto::Roles::Implementor;
+
+  has CArray[uint32] $!c is implementor;
 
   submethod BUILD ( :channel(:$c ) ) {
     given $c {
@@ -32,55 +39,63 @@ class Terminal::NotCurses::Channel {
     $!c
   }
 
-  method new (Int() $c) {
+  multi method new {
+    self.new(0);
+  }
+  multi method new (Int() $c) {
     return Nil unless $c.defined;
 
     self.bless( :$c )
   }
-
-  method new (Int() $r, Int() $g, Int() $b) {
-    my uint32 $c = 0;
-
-    my $o = self.bless( :$c );
+  multi method new (Int() $r, Int() $g, Int() $b) {
+    my $o = self.new;
     $o.rgb8($r, $g, $b);
   }
 
-  multi method a ( :$shift = True )  is rw {
-    return Nil unless ncchannel_a_p(self);
+  multi method a ( :$shift = False )  is rw {
+    return 0 unless ncchannel_alpha( $!c[0] );
 
     Proxy.new:
       FETCH => -> $ {
-        my uint32 $s = self;
+        my $a = ncchannel_alpha( $!c[0] );
 
-        ncchannel_a( $!c[0] ) +> ( $s ?? NCALPHA_SHIFT !! 0 )
+        $a +> ( $shift ?? NCALPHA_SHIFT !! 0 )
       },
 
       STORE => -> $, \v {
-        my CArray[uint32]Terminal::Roles::NotCurses::Channel; $s  = self;
         my uint32         $vv =
-          (v +< ( $shift ?? NCALPHA_SHIFT !! 0 )) +& NC_BG_ALPHA_MASH);
+          (v +< ( $shift ?? NCALPHA_SHIFT !! 0 )) +& NC_BG_ALPHA_MASK;
 
-        ncchannel_set_a($!c, $vv);
+        ncchannel_set_alpha($!c, $vv);
         self
       }
   }
 
   method palindex is rw {
-    return Nil unless ncchannel_palindex_p(self);
+    return Nil unless ncchannel_palindex_p( $!c[0] );
 
     Proxy.new:
       FETCH => -> $ {
-        my uint32 $s = self;
-
         ncchannel_palindex( $!c[0] );
       },
 
       STORE => -> $, \v {
-        my CArray[uint32] $s  = self;
-        my uint32         $vv = v;
+        my uint32 $vv = v;
 
         ncchannel_set_palindex($!c, $vv);
       };
+  }
+
+  multi method rgb8 ( :$all = True ) {
+    samewith($, $, $, :$all);
+  }
+  multi method rgb8 ( $r is rw, $g is rw, $b is rw, :$all = True) {
+    my uint32 ($rr, $gg, $bb) = 0 xx 3;
+
+    my $c = ncchannel_rgb8($!c[0], $rr, $gg, $bb);
+    my @r = ($c, $r = $rr, $g = $gg, $g = $bb);
+    return @r if $all;
+    @r.skip(1);
   }
 
   method rgb is rw {
@@ -99,91 +114,70 @@ class Terminal::NotCurses::Channel {
 
   method g is rw {
     Proxy.new:
-      FETCH => -> $        { ncchannel_g( $!c[0] )  },
-      STORE => -> $, Int() { ::?CLASS.set_g($!c, v) }
+      FETCH => -> $           { ncchannel_g( $!c[0] )  },
+      STORE => -> $, Int() $v { ::?CLASS.set_g($!c, $v) }
   }
 
   method r is rw {
     Proxy.new:
       FETCH => -> $           { ncchannel_r( $!c[0] )  },
-      STORE => -> $, Int() $v { ::?CLASS.set_r($!c, v) }
+      STORE => -> $, Int() $v { ::?CLASS.set_r($!c, $v) }
   }
 
   method b-offset {
     Proxy.new:
       FETCH => -> $           { ncchannel_b( $!c[0] )        },
-      STORE => -> $, Int() $v { ::?CLASS.set_b($!c, $.r + v) }
+      STORE => -> $, Int() $v { ::?CLASS.set_b($!c, $.r + $v) }
   }
 
   method g-offset {
     Proxy.new:
       FETCH => -> $           { ncchannel_g( $!c[0] )        },
-      STORE => -> $, Int() $v { ::?CLASS.set_g($!c, $.g + v) }
+      STORE => -> $, Int() $v { ::?CLASS.set_g($!c, $.g + $v) }
   }
 
   method r-offset {
     Proxy.new:
       FETCH => -> $           { ncchannel_r( $!c[0] )              },
-      STORE => -> $, Int() $v { ::?CLASS.set_r($!c, $.r + v); self }
+      STORE => -> $, Int() $v { ::?CLASS.set_r($!c, $.r + $v); self }
   }
 
-  method rgb8 {
-    ncchannel_rgb8(self);
-  }
-
-  method default {
-    Proxy.new:
-      FETCH => $ {
-        ncchannel_default_p( $!c[0] );
-      },
-
-      STORE => $, Int() $v {
-        my uint32 $vv = v;
-
-        ncchannel_set_default($!c, $vv);
-      }
+  method set_default {
+    ncchannel_set_default($!c);
   }
 
   method set_palindex (Int() $vv) {
     my uint32 $v = $vv;
 
-    nchannel_set_palindex($!c, $v);
+    ncchannel_set_palindex($!c, $v);
     self
   }
 
   method set_r (Int() $vv) {
     my uint32 $v = $vv;
 
-    my $ca = newCArray(uint32, first => self);
-
-    nchannel_set_rgb8_clipped($!c, $v, $s.g, $s.b);
+    ncchannel_set_rgb8_clipped($!c, $v, $.g, $.b);
     self
   }
 
   method set_g (Int() $vv) {
     my uint32 $v = $vv;
 
-    my $ca = newCArray(uint32, first => $s);
-
-    nchannel_set_rgb8_clipped($!c, $s.r, $v, $s.b);
+    ncchannel_set_rgb8_clipped($!c, $.r, $v, $.b);
     self;
   }
 
   method set_b (Int() $vv) {
     my uint32 $v = $vv;
 
-    my $ca = newCArray(uint32, first => $s);
-
-    nchannel_set_rgb8_clipped($!c, $s.r, $s.g, $vv);
+    ncchannel_set_rgb8_clipped($!c, $.r, $.g, $vv);
     self
   }
 
   method set_rgb8 (Int() $r, Int() $g, Int() $b) {
-    my uint32 ($rr, $gg, $bb) = ($r, $g, $b);
+    my int32 ($rr, $gg, $bb) = ($r, $g, $b);
 
-    my $ca = newCArray(uint32, first => $s);
-
-    nchannel_set_rgb8_clipped($!c, $rr, $gg, $bb);
+    ncchannel_set_rgb8_clipped($!c, $rr, $gg, $bb);
     self;
   }
 

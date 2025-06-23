@@ -9,8 +9,12 @@ use Terminal::NotCurses::Raw::Structs;
 
 use Terminal::NotCurses::Raw::Plane;
 
+use Proto::Roles::Implementor;
+
 class Terminal::NotCurses::Plane {
-  has ncplane $!p;
+  also does Proto::Roles::Implementor;
+
+  has ncplane $!p is implementor;
 
   submethod BUILD ( :plane(:$!p) ) { }
 

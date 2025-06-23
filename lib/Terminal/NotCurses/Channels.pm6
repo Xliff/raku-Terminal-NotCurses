@@ -2,24 +2,40 @@ use v6;
 
 use NativeCall;
 
+use Terminal::NotCurses::Raw::Types;
 use Terminal::NotCurses::Raw::Channels;
 
 use Terminal::NotCurses::Channel;
 
+use Proto::Roles::Implementor;
+
 class Terminal::NotCurses::Channels {
-  has CArray[uint32] $!cc;
+  also does Proto::Roles::Implementor;
+  
+  has CArray[uint64] $!cc is implementor;
 
   submethod BUILD ( :$cc is copy, :$fg, :$bg ) {
     if $fg || $bg {
-      $!cc = CArray[uint64].allocate(2);
-      $!cc[0] = $fg // 0;
-      $!cc[1] = $bg // 0;
+      my $CC = CArray[uint32].allocate(2);
+      $CC[0] = $fg // 0;
+      $CC[1] = $bg // 0;
+      $!cc = cast(CArray[uint64], $_);
     } else {
+      return unless $cc.defined;
+
       do given $cc {
-        when CArray[uint64] { $!cc = $cc         }
         when .^can('Int')   { $_ .= Int; proceed }
         when Num            { $_ .= Int; proceed }
-        when Int            { $!cc[0] = $cc      }
+
+        when Int            {
+          my $CC = $_;
+          $_ = CArray[uint64].allocate(1);
+          .[0] = $CC;
+          $!cc = $_;
+        }
+
+        when CArray[uint32] { $!cc = cast(CArray[uint64], $cc) }
+        when CArray[uint64] { $!cc = $_                        }
 
         default {
           X::Proto::InvalidType.new(
@@ -33,15 +49,23 @@ class Terminal::NotCurses::Channels {
 
   }
 
+  method Int {
+    $!cc[0]
+  }
+
   method Terminal::NotCurses::Raw::Definitions::ncchannels
   { $!cc }
 
-  method new (
+  multi method new {
+    self.new(0);
+  }
+  multi method new (
     Terminal::NotCurses::Channel $fg,
     Terminal::NotCurses::Channel $bg
   ) {
-
-  method new (Int() $channels) {
+    self.bless( :$fg, :$bg );
+  }
+  multi method new (Int() $channels) {
     self.bless( cc => $channels );
   }
 
@@ -57,12 +81,10 @@ class Terminal::NotCurses::Channels {
     ncchannels_bg_default_p( $!cc[0] );
   }
 
-  method bg_palindex_p {
-    ncchannels_bg_palindex_p( $!cc[0] );
-  }
-
   method bg_palindex {
-    ncchannels_bg_palindex( $!cc[0] );
+    Proxy.new:
+      FETCH => -> $ { ncchannels_bg_palindex_p( $!cc[0] ) }
+      STORE => -> $, \v { $.set_bg_palindex(v); v       }
   }
 
   method bg_rgb8 ($r is rw, $g is rw, $b is rw, :$raw = False) {
@@ -107,10 +129,12 @@ class Terminal::NotCurses::Channels {
   }
 
   method fg_palindex {
-    ncchannels_fg_palindex( $!cc[0] );
+    Proxy.new:
+      FETCH => -> $ { ncchannels_fg_palindex_p( $!cc[0] ) }
+      STORE => -> $, \v { $.set_fg_palindex(v); v       }
   }
 
-  method fg_rgb8 ($r is rw, $g is rw, $b is rw) {
+  method fg_rgb8 ($r is rw, $g is rw, $b is rw, :$raw = False) {
     my int32 ($rr, $gg, $bb) = 0 xx 3;
 
     ncchannels_fg_rgb8($!cc[0], $rr, $gg, $bb);

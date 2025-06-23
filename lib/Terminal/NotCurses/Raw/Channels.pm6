@@ -159,7 +159,7 @@ sub ncchannels_set_bchannel (
   is      symbol('ncchannels_set_bchannel_export')
 { * }
 
-sub ncchannels_set_bg_alpha (CArray[uint64] $channels)
+sub ncchannels_set_bg_alpha (CArray[uint64] $channels, uint32 $a)
   returns int32
   is      native(notcurses-export)
   is      export
@@ -173,7 +173,7 @@ sub ncchannels_set_bg_default (CArray[uint64] $channels)
   is      symbol('ncchannels_set_bg_default_export')
 { * }
 
-sub ncchannels_set_bg_palindex (CArray[uint64] $channels)
+sub ncchannels_set_bg_palindex (CArray[uint64] $channels, uint32 $v)
   returns int32
   is      native(notcurses-export)
   is      export
@@ -225,7 +225,7 @@ sub ncchannels_set_fchannel (
   is      symbol('ncchannels_set_fchannel_export')
 { * }
 
-sub ncchannels_set_fg_alpha (CArray[uint64] $channels)
+sub ncchannels_set_fg_alpha (CArray[uint64] $channels, uint32 $v)
   returns int32
   is      native(notcurses-export)
   is      export
@@ -239,7 +239,7 @@ sub ncchannels_set_fg_default (CArray[uint64] $channels)
   is      symbol('ncchannels_set_fg_default_export')
 { * }
 
-sub ncchannels_set_fg_palindex (CArray[uint64] $channels)
+sub ncchannels_set_fg_palindex (CArray[uint64] $channels, uint32 $v)
   returns int32
   is      native(notcurses-export)
   is      export

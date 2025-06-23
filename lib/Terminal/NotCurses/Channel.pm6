@@ -1,6 +1,7 @@
 use v6;
 
 use NativeCall;
+use Method::Also;
 
 use Terminal::NotCurses::Raw::Types;
 use Terminal::NotCurses::Raw::Channel;
@@ -69,6 +70,15 @@ class Terminal::NotCurses::Channel {
         ncchannel_set_alpha($!c, $vv);
         self
       }
+  }
+
+  method default
+    is also<
+      is-default
+      is_default
+    >
+  {
+    ncchannel_default_p ( $!c[0] )
   }
 
   method palindex is rw {

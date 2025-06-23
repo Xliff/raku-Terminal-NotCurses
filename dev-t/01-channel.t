@@ -61,7 +61,7 @@ subtest {
   {
     my $c = Terminal::NotCurses::Channel.new( .head );
 
-    ok $c.is-default == .tail, "Channel default status is { .Str }";
+    ok $c.is-default == .tail, "Channel default status is { .tail.Str }";
   }
 }, 'Get Default';
 
@@ -72,9 +72,9 @@ subtest {
   {
     my $c = Terminal::NotCurses::Channel.new($_);
 
-    nok $c.is-default, "Channel is not set to default color";
-    $c.set-default;
-    ok  $c.is-default, "Channel is now set to default color";
+    nok $c.is_default, "Channel is not set to default color ({ $c.Int })";
+    $c.set_default;
+    ok  $c.is_default, "Channel is now set to default color ({ $c.Int })";
   }
 }, 'Set Default';
 

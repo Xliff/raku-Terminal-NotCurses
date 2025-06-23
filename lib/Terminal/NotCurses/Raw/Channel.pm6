@@ -84,8 +84,9 @@ sub ncchannel_set_alpha (CArray[uint32] $channel, uint32 $a)
 
 sub ncchannel_set_default (CArray[uint32] $channel)
   returns int32
-  is      native(&notcurses)
+  is      native(notcurses-export)
   is      export
+  is      symbol('ncchannel_set_default_export')
 { * }
 
 sub ncchannel_set_rgb8 (

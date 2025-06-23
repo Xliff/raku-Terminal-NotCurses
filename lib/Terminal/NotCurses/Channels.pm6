@@ -11,7 +11,7 @@ use Proto::Roles::Implementor;
 
 class Terminal::NotCurses::Channels {
   also does Proto::Roles::Implementor;
-  
+
   has CArray[uint64] $!cc is implementor;
 
   submethod BUILD ( :$cc is copy, :$fg, :$bg ) {
@@ -81,9 +81,9 @@ class Terminal::NotCurses::Channels {
     ncchannels_bg_default_p( $!cc[0] );
   }
 
-  method bg_palindex {
+  method bg_palindex is rw {
     Proxy.new:
-      FETCH => -> $ { ncchannels_bg_palindex_p( $!cc[0] ) }
+      FETCH => -> $ { ncchannels_bg_palindex_p( $!cc[0] ) },
       STORE => -> $, \v { $.set_bg_palindex(v); v       }
   }
 
@@ -128,9 +128,9 @@ class Terminal::NotCurses::Channels {
     ncchannels_fg_palindex_p( $!cc[0] );
   }
 
-  method fg_palindex {
+  method fg_palindex is rw {
     Proxy.new:
-      FETCH => -> $ { ncchannels_fg_palindex_p( $!cc[0] ) }
+      FETCH => -> $     { ncchannels_fg_palindex_p( $!cc[0] ) },
       STORE => -> $, \v { $.set_fg_palindex(v); v       }
   }
 
@@ -163,8 +163,10 @@ class Terminal::NotCurses::Channels {
     self;
   }
 
-  method set_bg_alpha {
-    ncchannels_set_bg_alpha($!cc);
+  method set_bg_alpha (Int() $v) {
+    my uint32 $vv = $v;
+
+    ncchannels_set_bg_alpha($!cc, $v);
     self;
   }
 
@@ -173,8 +175,10 @@ class Terminal::NotCurses::Channels {
     self;
   }
 
-  method set_bg_palindex {
-    ncchannels_set_bg_palindex($!cc);
+  method set_bg_palindex (Int() $v) {
+    my uint32 $vv = $v;
+
+    ncchannels_set_bg_palindex($!cc, $vv);
     self;
   }
 
@@ -209,8 +213,10 @@ class Terminal::NotCurses::Channels {
     self;
   }
 
-  method set_fg_alpha {
-    ncchannels_set_fg_alpha($!cc);
+  method set_fg_alpha (Int() $v) {
+    my uint32 $vv = $v;
+
+    ncchannels_set_fg_alpha($!cc, $v);
     self;
   }
 
@@ -219,8 +225,10 @@ class Terminal::NotCurses::Channels {
     self;
   }
 
-  method set_fg_palindex {
-    ncchannels_set_fg_palindex($!cc);
+  method set_fg_palindex (Int() $v) {
+    my uint32 $vv = $v;
+
+    ncchannels_set_fg_palindex($!cc, $v);
     self;
   }
 

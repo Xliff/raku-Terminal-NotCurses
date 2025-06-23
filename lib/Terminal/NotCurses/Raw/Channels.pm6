@@ -15,6 +15,7 @@ sub ncchannels_bchannel (uint64 $channels)
 { * }
 
 sub ncchannels_bg_alpha (uint64 $channels)
+  returns uint32
   is      native(notcurses-export)
   is      export
   is      symbol('ncchannels_bg_alpha_export')
@@ -91,6 +92,7 @@ sub ncchannels_fchannel (uint64 $channels)
 { * }
 
 sub ncchannels_fg_alpha (uint64 $channels)
+  returns uint32
   is      native(notcurses-export)
   is      export
   is      symbol('ncchannels_fg_alpha_export')

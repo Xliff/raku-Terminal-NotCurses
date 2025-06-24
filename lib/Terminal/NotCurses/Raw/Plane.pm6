@@ -125,6 +125,13 @@ sub ncplane_bg_default_p (ncplane $n)
   is      symbol('ncplane_bg_default_p_export')
 { * }
 
+sub ncplane_bg_rgb (ncplane $n)
+  returns uint32
+  is      native(notcurses-export)
+  is      export
+  is      symbol('ncplane_bg_rgb_export')
+{ * }
+
 sub ncplane_bg_rgb8 (
   ncplane $n,
   int32    $r is rw,
@@ -135,13 +142,6 @@ sub ncplane_bg_rgb8 (
   is      native(notcurses-export)
   is      export
   is      symbol('ncplane_bg_rgb8_export')
-{ * }
-
-sub ncplane_bg_rgb (ncplane $n)
-  returns uint32
-  is      native(notcurses-export)
-  is      export
-  is      symbol('ncplane_bg_rgb_export')
 { * }
 
 sub ncplane_box (
@@ -194,6 +194,15 @@ sub ncplane_contents (
   int32    $begx
 )
   returns Str
+  is      native(&notcurses)
+  is      export
+{ * }
+
+sub ncplane_create (
+  ncplane         $n,
+  ncplane_options $nopts
+)
+  returns ncplane
   is      native(&notcurses)
   is      export
 { * }
@@ -268,20 +277,6 @@ sub ncplane_dim_yx (
   is      export
 { * }
 
-sub ncplane_double_box_sized (
-  ncplane $n,
-  uint16  $styles,
-  uint64  $channels,
-  uint32  $ylen,
-  uint32  $xlen,
-  uint32  $ctlword
-)
-  returns int32
-  is      native(notcurses-export)
-  is      export
-  is      symbol('ncplane_double_box_sized_export')
-{ * }
-
 sub ncplane_double_box (
   ncplane $n,
   uint16  $styles,
@@ -297,6 +292,20 @@ sub ncplane_double_box (
   is      native(notcurses-export)
   is      export
   is      symbol('ncplane_double_box_export')
+{ * }
+
+sub ncplane_double_box_sized (
+  ncplane $n,
+  uint16  $styles,
+  uint64  $channels,
+  uint32  $ylen,
+  uint32  $xlen,
+  uint32  $ctlword
+)
+  returns int32
+  is      native(notcurses-export)
+  is      export
+  is      symbol('ncplane_double_box_sized_export')
 { * }
 
 sub ncplane_dup (
@@ -392,6 +401,13 @@ sub ncplane_fg_default_p (ncplane $n)
   is      symbol('ncplane_fg_default_p_export')
 { * }
 
+sub ncplane_fg_rgb (ncplane $n)
+  returns uint32
+  is      native(notcurses-export)
+  is      export
+  is      symbol('ncplane_fg_rgb_export')
+{ * }
+
 sub ncplane_fg_rgb8 (
   ncplane $n,
   int32    $r is rw,
@@ -402,13 +418,6 @@ sub ncplane_fg_rgb8 (
   is      native(notcurses-export)
   is      export
   is      symbol('ncplane_fg_rgb8_export')
-{ * }
-
-sub ncplane_fg_rgb (ncplane $n)
-  returns uint32
-  is      native(notcurses-export)
-  is      export
-  is      symbol('ncplane_fg_rgb_export')
 { * }
 
 sub ncplane_format (
@@ -469,6 +478,16 @@ sub ncplane_halign (
   is      symbol('ncplane_halign_export')
 { * }
 
+sub ncplane_hline (
+  ncplane $n,
+  nccell  $c
+)
+  returns int32
+  is      native(notcurses-export)
+  is      export
+  is      symbol('ncplane_hline_export')
+{ * }
+
 sub ncplane_hline_interp (
   ncplane  $n,
   nccell   $c,
@@ -479,16 +498,6 @@ sub ncplane_hline_interp (
   returns int32
   is      native(&notcurses)
   is      export
-{ * }
-
-sub ncplane_hline (
-  ncplane $n,
-  nccell  $c
-)
-  returns int32
-  is      native(notcurses-export)
-  is      export
-  is      symbol('ncplane_hline_export')
 { * }
 
 sub ncplane_mergedown (
@@ -633,6 +642,21 @@ sub ncplane_parent_const (ncplane $n)
   is      export
 { * }
 
+sub ncplane_perimeter (
+  ncplane $n,
+  nccell  $ul,
+  nccell  $ur,
+  nccell  $ll,
+  nccell  $lr,
+  nccell  $hline,
+  nccell  $vline
+)
+  returns int32
+  is      native(notcurses-export)
+  is      export
+  is      symbol('ncplane_perimeter_export')
+{ * }
+
 sub ncplane_perimeter_double (
   ncplane $n,
   uint16  $stylemask,
@@ -657,21 +681,6 @@ sub ncplane_perimeter_rounded (
   is      symbol('ncplane_perimeter_rounded_export')
 { * }
 
-sub ncplane_perimeter (
-  ncplane $n,
-  nccell  $ul,
-  nccell  $ur,
-  nccell  $ll,
-  nccell  $lr,
-  nccell  $hline,
-  nccell  $vline
-)
-  returns int32
-  is      native(notcurses-export)
-  is      export
-  is      symbol('ncplane_perimeter_export')
-{ * }
-
 sub ncplane_pixel_geom (
   ncplane $n,
   int32   $pxy      is rw,
@@ -694,6 +703,17 @@ sub ncplane_polyfill_yx (
   returns int32
   is      native(&notcurses)
   is      export
+{ * }
+
+sub ncplane_printf (
+  ncplane $n,
+  Str     $format,
+  Str
+)
+  returns int32
+  is      native(notcurses-export)
+  is      export
+  is      symbol('ncplane_printf_export')
 { * }
 
 sub ncplane_printf_aligned (
@@ -732,33 +752,11 @@ sub ncplane_printf_yx (
   is      symbol('ncplane_printf_yx_export')
 { * }
 
-sub ncplane_printf (
-  ncplane $n,
-  Str     $format,
-  Str
-)
-  returns int32
-  is      native(notcurses-export)
-  is      export
-  is      symbol('ncplane_printf_export')
-{ * }
-
 sub ncplane_pulse (
   ncplane  $n,
   timespec $ts,
            &fader (notcurses, ncplane, timespec, Pointer --> int32),
   Pointer  $curry
-)
-  returns int32
-  is      native(&notcurses)
-  is      export
-{ * }
-
-sub ncplane_putc_yx (
-  ncplane $n,
-  int32    $y,
-  int32    $x,
-  nccell  $c
 )
   returns int32
   is      native(&notcurses)
@@ -773,6 +771,24 @@ sub ncplane_putc (
   is      native(notcurses-export)
   is      export
   is      symbol('ncplane_putc_export')
+{ * }
+
+sub ncplane_putc_yx (
+  ncplane $n,
+  int32    $y,
+  int32    $x,
+  nccell  $c
+)
+  returns int32
+  is      native(&notcurses)
+  is      export
+{ * }
+
+sub ncplane_putchar (ncplane $n, Str $c)
+  returns int32
+  is      native(notcurses-export)
+  is      export
+  is      symbol('ncplane_putchar_export')
 { * }
 
 sub ncplane_putchar_stained (
@@ -796,11 +812,15 @@ sub ncplane_putchar_yx (
   is      symbol('ncplane_putchar_yx_export')
 { * }
 
-sub ncplane_putchar (ncplane $n, Str $c)
+sub ncplane_putegc (
+  ncplane $n,
+  Str     $gclust,
+  size_t  $sbytes
+)
   returns int32
   is      native(notcurses-export)
   is      export
-  is      symbol('ncplane_putchar_export')
+  is      symbol('ncplane_putegc_export')
 { * }
 
 sub ncplane_putegc_stained (
@@ -825,15 +845,15 @@ sub ncplane_putegc_yx (
   is      export
 { * }
 
-sub ncplane_putegc (
+sub ncplane_putnstr (
   ncplane $n,
-  Str     $gclust,
-  size_t  $sbytes
+  size_t  $s,
+  Str     $gclustarr
 )
   returns int32
   is      native(notcurses-export)
   is      export
-  is      symbol('ncplane_putegc_export')
+  is      symbol('ncplane_putnstr_export')
 { * }
 
 sub ncplane_putnstr_aligned (
@@ -861,15 +881,14 @@ sub ncplane_putnstr_yx (
   is      symbol('ncplane_putnstr_yx_export')
 { * }
 
-sub ncplane_putnstr (
+sub ncplane_putstr (
   ncplane $n,
-  size_t  $s,
   Str     $gclustarr
 )
   returns int32
   is      native(notcurses-export)
   is      export
-  is      symbol('ncplane_putnstr_export')
+  is      symbol('ncplane_putstr_export')
 { * }
 
 sub ncplane_putstr_aligned (
@@ -906,16 +925,6 @@ sub ncplane_putstr_yx (
   is      symbol('ncplane_putstr_yx_export')
 { * }
 
-sub ncplane_putstr (
-  ncplane $n,
-  Str     $gclustarr
-)
-  returns int32
-  is      native(notcurses-export)
-  is      export
-  is      symbol('ncplane_putstr_export')
-{ * }
-
 sub ncplane_puttext (
   ncplane   $n,
   int32     $y,
@@ -938,6 +947,16 @@ sub ncplane_pututf32_yx (
   is      native(notcurses-export)
   is      export
   is      symbol('ncplane_pututf32_yx_export')
+{ * }
+
+sub ncplane_putwc (
+  ncplane $n,
+  wchar_t $w
+)
+  returns int32
+  is      native(notcurses-export)
+  is      export
+  is      symbol('ncplane_putwc_export')
 { * }
 
 sub ncplane_putwc_stained (
@@ -973,14 +992,15 @@ sub ncplane_putwc_yx (
   is      symbol('ncplane_putwc_yx_export')
 { * }
 
-sub ncplane_putwc (
-  ncplane $n,
-  wchar_t $w
+sub ncplane_putwegc (
+  ncplane         $n,
+  CArray[wchar_t] $gclust,
+  size_t          $sbytes is rw
 )
   returns int32
   is      native(notcurses-export)
   is      export
-  is      symbol('ncplane_putwc_export')
+  is      symbol('ncplane_putwegc_export')
 { * }
 
 sub ncplane_putwegc_stained (
@@ -1004,17 +1024,6 @@ sub ncplane_putwegc_yx (
   is      native(notcurses-export)
   is      export
   is      symbol('ncplane_putwegc_yx_export')
-{ * }
-
-sub ncplane_putwegc (
-  ncplane         $n,
-  CArray[wchar_t] $gclust,
-  size_t          $sbytes is rw
-)
-  returns int32
-  is      native(notcurses-export)
-  is      export
-  is      symbol('ncplane_putwegc_export')
 { * }
 
 sub ncplane_putwstr (
@@ -1105,6 +1114,24 @@ sub ncplane_resize (
   is      export
 { * }
 
+sub ncplane_resize_marginalized (ncplane $n)
+  returns int32
+  is      native(&notcurses)
+  is      export
+{ * }
+
+sub ncplane_resize_maximize (ncplane $n)
+  returns int32
+  is      native(&notcurses)
+  is      export
+{ * }
+
+sub ncplane_resize_placewithin (ncplane $n)
+  returns int32
+  is      native(&notcurses)
+  is      export
+{ * }
+
 sub ncplane_resize_simple (ncplane $n)
   returns int32
   is      native(notcurses-export)
@@ -1124,17 +1151,6 @@ sub ncplane_rotate_cw (ncplane $n)
   is      export
 { * }
 
-sub ncplane_rounded_box_sized (
-  ncplane $n,
-  uint16  $styles,
-  uint64  $channels
-)
-  returns int32
-  is      native(notcurses-export)
-  is      export
-  is      symbol('ncplane_rounded_box_sized_export')
-{ * }
-
 sub ncplane_rounded_box (
   ncplane $n,
   uint16  $styles,
@@ -1144,6 +1160,17 @@ sub ncplane_rounded_box (
   is      native(notcurses-export)
   is      export
   is      symbol('ncplane_rounded_box_export')
+{ * }
+
+sub ncplane_rounded_box_sized (
+  ncplane $n,
+  uint16  $styles,
+  uint64  $channels
+)
+  returns int32
+  is      native(notcurses-export)
+  is      export
+  is      symbol('ncplane_rounded_box_sized_export')
 { * }
 
 sub ncplane_scrolling_p (ncplane $n)
@@ -1322,6 +1349,15 @@ sub ncplane_set_fg_rgb8_clipped (
   is      export
 { * }
 
+sub ncplane_set_name (
+  ncplane $n,
+  Str     $name
+)
+  returns int32
+  is      native(&notcurses)
+  is      export
+{ * }
+
 sub ncplane_set_scrolling (ncplane $n)
   returns bool
   is      native(&notcurses)
@@ -1399,6 +1435,16 @@ sub ncplane_valign (
   is      symbol('ncplane_valign_export')
 { * }
 
+sub ncplane_vline (
+  ncplane $n,
+  nccell  $c
+)
+  returns int32
+  is      native(notcurses-export)
+  is      export
+  is      symbol('ncplane_vline_export')
+{ * }
+
 sub ncplane_vline_interp (
   ncplane $n,
   nccell  $c,
@@ -1411,14 +1457,15 @@ sub ncplane_vline_interp (
   is      export
 { * }
 
-sub ncplane_vline (
+sub ncplane_vprintf (
   ncplane $n,
-  nccell  $c
+  Str     $format,
+  Str
 )
   returns int32
   is      native(notcurses-export)
   is      export
-  is      symbol('ncplane_vline_export')
+  is      symbol('ncplane_vprintf_export')
 { * }
 
 sub ncplane_vprintf_aligned (
@@ -1449,17 +1496,6 @@ sub ncplane_vprintf_yx (
   returns int32
   is      native(&notcurses)
   is      export
-{ * }
-
-sub ncplane_vprintf (
-  ncplane $n,
-  Str     $format,
-  Str
-)
-  returns int32
-  is      native(notcurses-export)
-  is      export
-  is      symbol('ncplane_vprintf_export')
 { * }
 
 sub ncplane_x (ncplane $n)

@@ -3,6 +3,8 @@ use v6.c;
 use Terminal::NotCurses::Raw::Types;
 use Terminal::NotCurses::Raw::Cells;
 
+use Terminal::NotCurses::Cell;
+
 class Terminal::NotCurses::Cells {
 
   proto method ascii_box (|)
@@ -44,7 +46,7 @@ class Terminal::NotCurses::Cells {
   { * }
 
   multi method double_box (ncplane() $n, Int() $attr, Int() $channels) {
-    my ($ul, $ur, $ll, $lr, $hl, $vl) = Terminal::Curses::Cell.new xx 6;
+    my ($ul, $ur, $ll, $lr, $hl, $vl) = Terminal::NotCurses::Cell.new xx 6;
     samewith($n, $attr, $channels, $ul, $ur, $ll, $lr, $hl, $vl);
     ($ul, $ur, $ll, $lr, $hl, $vl)
   }
@@ -55,8 +57,10 @@ class Terminal::NotCurses::Cells {
               :$raw       is required where *.so
   ) {
     my ($ul, $ur, $ll, $lr, $hl, $vl) = nccell.new xx 6;
-    samewith($n, $attr, $channels, $ul, $ur, $ll, $lr, $hl, $vl);
-    ($ul, $ur, $ll, $lr, $hl, $vl)
+
+    my $rv = samewith($n, $attr, $channels, $ul, $ur, $ll, $lr, $hl, $vl);
+
+    $rv.not ?? ($ul, $ur, $ll, $lr, $hl, $vl) !! Nil;
   }
   multi method double_box (
     ncplane() $n,
@@ -72,7 +76,9 @@ class Terminal::NotCurses::Cells {
     my uint16 $a = $attr;
     my uint64 $c = $channels;
 
-    nccells_double_box($n, $a, $c, $ul, $ur, $ll, $lr, $hl, $vl);
+    my $rv = nccells_double_box($n, $a, $c, $ul, $ur, $ll, $lr, $hl, $vl);
+
+    $rv.not ?? ($ul, $ur, $ll, $lr, $hl, $vl) !! Nil;
   }
 
   proto method heavy_box (|)

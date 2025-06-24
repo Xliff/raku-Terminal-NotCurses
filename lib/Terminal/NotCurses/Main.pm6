@@ -25,7 +25,8 @@ class Terminal::NotCurses::Main {
       NCOPTION_SUPPRESS_BANNERS,
       NCOPTION_NO_ALTERNATE_SCREEN,
       NCOPTION_DRAIN_INPUT
-    )
+    ),
+    :$stop       = True
   ) {
     my $o = notcurses_options.new(
       :$term,
@@ -38,9 +39,15 @@ class Terminal::NotCurses::Main {
     );
 
     $NC = notcurses_core_init($o, Pointer);
-    END { notcurses_stop($NC) }
+    if $stop {
+      END { ::?CLASS.stop }
+    }
 
     self.bless;
+  }
+
+  method stop {
+    notcurses_stop($NC)
   }
 
   method stdplane ( :$raw = False ) {

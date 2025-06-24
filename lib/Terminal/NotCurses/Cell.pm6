@@ -1,13 +1,30 @@
 use v6;
 
+use NativeCall;
+
+use Terminal::NotCurses::Raw::Types;
+use Terminal::NotCurses::Raw::Cell;
+
 class Terminal::NotCurses::Cell {
   has nccell $!c;
 
-  submethod BUILD ( :cell(:$!c) )
-  { }
+  submethod BUILD ( :$cell ) {
+    $!c = $cell if $cell;
+  }
 
-  method Terminal::NotCurses::Definitions::nccell
+  submethod TWEAK {
+    $!c //= nccell.new;
+  }
+
+  method Terminal::NotCurses::Raw::Structs::nccell
   { $!c }
+
+  multi method new (nccell $cell) {
+    $cell ?? self.bless( :$cell ) !! Nil;
+  }
+  multi method new {
+    self.bless;
+  }
 
   method bchannel {
     nccell_bchannel($!c);
@@ -21,7 +38,7 @@ class Terminal::NotCurses::Cell {
     nccell_bg_default_p($!c);
   }
 
-  method bg_palindex_p {
+  method bg_palindex_p {Terminal::NotCurses::Plane
     nccell_bg_palindex_p($!c);
   }
 
@@ -36,7 +53,7 @@ class Terminal::NotCurses::Cell {
     samewith($, $, $);
   }
   multi method bg_rgb8 ($r is rw, $g is rw, $b is rw) {
-    my gint ($rr, $gg, $bb) = 0 xx 3;
+    my int32 ($rr, $gg, $bb) = 0 xx 3;
 
     nccell_bg_rgb8($!c, $rr, $gg, $bb);
     ($r, $g, $b) = ($rr, $gg, $bb)
@@ -62,11 +79,11 @@ class Terminal::NotCurses::Cell {
     nccell_double_wide_p($!c);
   }
 
-  method extract ($p) {
+  multi method extract ($p) {
     samewith($p, $, $);
   }
-  method extract (
-    ncplane() $p
+  multi method extract (
+    ncplane() $p,
               $stylemask is rw,
               $channels  is rw
   ) {
@@ -102,7 +119,7 @@ class Terminal::NotCurses::Cell {
     samewith($, $, $);
   }
   multi method fg_rgb8 ($r is rw, $g is rw, $b is rw) {
-    my gint ($rr, $gg, $bb) = 0 xx 3;
+    my int32 ($rr, $gg, $bb) = 0 xx 3;
 
     nccell_fg_rgb8($!c, $r, $g, $b);
   }
@@ -178,13 +195,15 @@ class Terminal::NotCurses::Cell {
   }
 
   method set_bg_rgb8_clipped (Int() $r, Int() $g, Int() $b) {
-    my gint ($rr, $gg, $bb) = ($r, $g, $b);
+    my uint32 ($rr, $gg, $bb) = ($r, $g, $b);
 
     nccell_set_bg_rgb8_clipped($!c, $rr, $gg, $bb);
   }
 
-  method set_bg_rgb8 {
-    nccell_set_bg_rgb8($!c);
+  method set_bg_rgb8 (Int() $r, Int() $g, Int() $b) {
+    my uint32 ($rr, $gg, $bb) = ($r, $g, $b);
+
+    nccell_set_bg_rgb8($!c, $rr, $gg, $bb);
   }
 
   method set_bg_rgb (Int() $channel) {
@@ -194,7 +213,7 @@ class Terminal::NotCurses::Cell {
   }
 
   method set_channels (Int() $channels) {
-    my uint64 $c = $channels
+    my uint64 $c = $channels;
 
     nccell_set_channels($!c, $c);
   }
@@ -222,13 +241,15 @@ class Terminal::NotCurses::Cell {
   }
 
   method set_fg_rgb8_clipped (Int() $r, Int() $g, Int() $b) {
-    my gint ($rr, $gg, $bb) = ($r, $g, $b);
+    my uint32 ($rr, $gg, $bb) = ($r, $g, $b);
 
     nccell_set_fg_rgb8_clipped($!c, $rr, $gg, $bb);
   }
 
-  method set_fg_rgb8 {
-    nccell_set_fg_rgb8($!c);
+  method set_fg_rgb8 (Int() $r, Int() $g, Int() $b) {
+    my uint32 ($rr, $gg, $bb) = ($r, $g, $b);
+
+    nccell_set_fg_rgb8($!c, $rr, $gg, $bb);
   }
 
   method set_fg_rgb (Int() $channel) {

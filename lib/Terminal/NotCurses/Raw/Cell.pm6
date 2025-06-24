@@ -10,35 +10,35 @@ unit package Terminal::NotCurses::Raw::Cell;
 
 sub nccell_bchannel (nccell $cl)
   returns uint32
-  is      native(notcurses-exports)
+  is      native(notcurses-export)
   is      export
   is      symbol('nccell_bchannel_export')
 { * }
 
 sub nccell_bg_alpha (nccell $cl)
   returns uint32
-  is      native(notcurses-exports)
+  is      native(notcurses-export)
   is      export
   is      symbol('nccell_bg_alpha_export')
 { * }
 
 sub nccell_bg_default_p (nccell $cl)
   returns bool
-  is      native(notcurses-exports)
+  is      native(notcurses-export)
   is      export
   is      symbol('nccell_bg_default_p_export')
 { * }
 
 sub nccell_bg_palindex_p (nccell $cl)
   returns bool
-  is      native(notcurses-exports)
+  is      native(notcurses-export)
   is      export
   is      symbol('nccell_bg_palindex_p_export')
 { * }
 
 sub nccell_bg_palindex (nccell $cl)
   returns uint32
-  is      native(notcurses-exports)
+  is      native(notcurses-export)
   is      export
   is      symbol('nccell_bg_palindex_export')
 { * }
@@ -50,34 +50,34 @@ sub nccell_bg_rgb8 (
   int32   $b is rw
 )
   returns uint32
-  is      native(notcurses-exports)
+  is      native(notcurses-export)
   is      export
   is      symbol('nccell_bg_rgb8_export')
 { * }
 
 sub nccell_bg_rgb (nccell $cl)
   returns uint32
-  is      native(notcurses-exports)
+  is      native(notcurses-export)
   is      export
   is      symbol('nccell_bg_rgb_export')
 { * }
 
 sub nccell_channels (nccell $c)
   returns uint64
-  is      native(notcurses-exports)
+  is      native(notcurses-export)
   is      export
   is      symbol('nccell_channels_export')
 { * }
 
 sub nccell_cols (nccell $c)
-  is      native(notcurses-exports)
+  is      native(notcurses-export)
   is      export
   is      symbol('nccell_cols_export')
 { * }
 
 sub nccell_double_wide_p (nccell $c)
   returns bool
-  is      native(notcurses-exports)
+  is      native(notcurses-export)
   is      export
   is      symbol('nccell_double_wide_p_export')
 { * }
@@ -194,13 +194,13 @@ sub nccell_load_ucs32 (ncplane $n, nccell $c, uint32 $u)
   is      symbol('nccell_load_ucs32_export')
 { * }
 
-sub nccell_off_styles (nccell $c)
+sub nccell_off_styles (nccell $c, uint32 $s)
   is      native(notcurses-export)
   is      export
   is      symbol('nccell_off_styles_export')
 { * }
 
-sub nccell_on_styles (nccell $c)
+sub nccell_on_styles (nccell $c, uint32 $s)
   is      native(notcurses-export)
   is      export
   is      symbol('nccell_on_styles_export')
@@ -231,7 +231,7 @@ sub nccell_set_bchannel (nccell $c, uint32 $channel)
   is      symbol('nccell_set_bchannel_export')
 { * }
 
-sub nccell_set_bg_alpha (nccell $c)
+sub nccell_set_bg_alpha (nccell $c, uint32 $a)
   returns int32
   is      native(notcurses-export)
   is      export
@@ -244,7 +244,7 @@ sub nccell_set_bg_default (nccell $c)
   is      symbol('nccell_set_bg_default_export')
 { * }
 
-sub nccell_set_bg_palindex (nccell $cl)
+sub nccell_set_bg_palindex (nccell $cl, uint32 $i)
   returns int32
   is      native(notcurses-export)
   is      export
@@ -253,23 +253,28 @@ sub nccell_set_bg_palindex (nccell $cl)
 
 sub nccell_set_bg_rgb8_clipped (
   nccell $cl,
-  int32   $r,
-  int32   $g,
-  int32   $b
+  uint32   $r,
+  uint32   $g,
+  uint32   $b
 )
   is      native(notcurses-export)
   is      export
   is      symbol('nccell_set_bg_rgb8_clipped_export')
 { * }
 
-sub nccell_set_bg_rgb8 (nccell $cl)
+sub nccell_set_bg_rgb8 (
+  nccell $cl,
+  uint32 $r,
+  uint32 $g,
+  uint32 $b
+)
   returns int32
   is      native(notcurses-export)
   is      export
   is      symbol('nccell_set_bg_rgb8_export')
 { * }
 
-sub nccell_set_bg_rgb (nccell $c, uint32 $channel)
+sub nccell_set_bg_rgb (nccell $c,uint32 $r)
   returns int32
   is      native(notcurses-export)
   is      export
@@ -290,7 +295,7 @@ sub nccell_set_fchannel (nccell $c, uint32 $channel)
   is      symbol('nccell_set_fchannel_export')
 { * }
 
-sub nccell_set_fg_alpha (nccell $c)
+sub nccell_set_fg_alpha (nccell $c, uint32 $a)
   returns int32
   is      native(notcurses-export)
   is      export
@@ -303,7 +308,7 @@ sub nccell_set_fg_default (nccell $c)
   is      symbol('nccell_set_fg_default_export')
 { * }
 
-sub nccell_set_fg_palindex (nccell $cl)
+sub nccell_set_fg_palindex (nccell $cl, uint32 $i)
   returns int32
   is      native(notcurses-export)
   is      export
@@ -312,16 +317,21 @@ sub nccell_set_fg_palindex (nccell $cl)
 
 sub nccell_set_fg_rgb8_clipped (
   nccell $cl,
-  int32   $r,
-  int32   $g,
-  int32   $b
+  uint32 $r,
+  uint32 $g,
+  uint32 $b
 )
   is      native(notcurses-export)
   is      export
   is      symbol('nccell_set_fg_rgb8_clipped_export')
 { * }
 
-sub nccell_set_fg_rgb8 (nccell $cl)
+sub nccell_set_fg_rgb8 (
+  nccell $cl,
+  uint32 $r,
+  uint32 $g,
+  uint32 $b
+)
   returns int32
   is      native(notcurses-export)
   is      export
@@ -335,7 +345,7 @@ sub nccell_set_fg_rgb (nccell $c, uint32 $channel)
   is      symbol('nccell_set_fg_rgb_export')
 { * }
 
-sub nccell_set_styles (nccell $c)
+sub nccell_set_styles (nccell $c, uint32 $s)
   is      native(notcurses-export)
   is      export
   is      symbol('nccell_set_styles_export')

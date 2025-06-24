@@ -78,16 +78,42 @@ class ncmenu_options is repr<CStruct> is export {
 }
 
 class ncplane_options is repr<CStruct> is export {
-  has int      $.y         is rw;
-  has int      $.x         is rw;
+  has int32    $.y         is rw;
+  has int32    $.x         is rw;
   has uint32   $.rows      is rw;
   has uint32   $.cols      is rw;
-  has Pointer  $.userptr        ;
-  has Str      $.name           ;
-  has Pointer  $.resizecb       ; #= &(ncplane);
+  has Pointer  $!userptr        ;
+  has Str      $!name           ;
+
+  has Pointer  $!resizecb       ; #= &(ncplane);
+
   has uint64   $.flags     is rw;
   has uint32   $.margin_b  is rw;
   has uint32   $.margin_r  is rw;
+
+  submethod TWEAK {
+    $!name     := Str     unless $!name;
+    $!resizecb := Pointer unless $!resizecb;
+    $!userptr  := Pointer unless $!userptr;
+  }
+
+  method userptr is rw {
+    Proxy.new:
+      FETCH => -> $             { $!userptr },
+      STORE => -> $, Pointer \v { self.^attributes[4].set_value(self, v) }
+  }
+
+  method name is rw {
+    Proxy.new:
+      FETCH => -> $           { $!name },
+      STORE => -> $, Str() $v { self.^attributes[5].set_value(self, $v) }
+  }
+
+  method new ($r, $c) {
+    my uint32 ($rr, $cc) = ($r, $c);
+
+    self.bless( rows => $r, cols => $c );
+  }
 }
 
 # cw: MUST be C-allocated!

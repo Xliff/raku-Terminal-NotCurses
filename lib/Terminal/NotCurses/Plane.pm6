@@ -1,15 +1,21 @@
 use v6;
 
 use NativeCall;
+use Method::Also;
 
 #use Terminal::NotCurses::Raw::Types;
 use Terminal::NotCurses::Raw::Definitions;
 use Terminal::NotCurses::Raw::Enums;
 use Terminal::NotCurses::Raw::Structs;
+use Terminal::NotCurses::Raw::Extern;
 
 use Terminal::NotCurses::Raw::Plane;
 
 use Proto::Roles::Implementor;
+
+sub create_ncplane_options is export {
+  ncplane_options_create;
+}
 
 class Terminal::NotCurses::Plane {
   also does Proto::Roles::Implementor;
@@ -19,9 +25,22 @@ class Terminal::NotCurses::Plane {
   submethod BUILD ( :plane(:$!p) ) { }
 
   method Terminal::NotCurses::Raw::Definitions::ncplane
+    is also<ncplane>
   { $!p }
 
-  method new (ncplane $plane) {
+  multi method new ( $plane where *.^can('ncplane') ) {
+    samewith($plane.ncplane);
+  }
+  multi method new (ncplane $plane) {
+    $plane ?? self.bless( :$plane ) !! Nil;
+  }
+  multi method new (ncplane_options $o) {
+    self.create(ncplane, $o);
+  }
+
+  method create (ncplane_options() $nopts) {
+    my $plane = ncplane_create($!p, $nopts);
+
     $plane ?? self.bless( :$plane ) !! Nil;
   }
 
@@ -652,7 +671,7 @@ class Terminal::NotCurses::Plane {
   method perimeter_double (
     Int() $stylemask,
     Int() $channels,
-    Int() $ctlword
+    Int() $ctlword    = 0
   ) {
     my uint16 $s = $stylemask;
     my uint64 $c = $channels;
@@ -664,7 +683,7 @@ class Terminal::NotCurses::Plane {
   method perimeter_rounded (
     Int() $stylemask,
     Int() $channels,
-    Int() $ctlword
+    Int() $ctlword    = 0
   ) {
     my uint16 $s = $stylemask;
     my uint64 $c = $channels;
@@ -680,7 +699,7 @@ class Terminal::NotCurses::Plane {
     nccell() $lr,
     nccell() $hline,
     nccell() $vline,
-    Int()    $ctlword
+    Int()    $ctlword = 0
   ) {
     my uint32 $w = $ctlword;
 
@@ -1064,6 +1083,19 @@ class Terminal::NotCurses::Plane {
   # ) {
   #   ncplane_resize($!p, $keepy, $keepx, $keepleny, $keeplenx, $yoff, $xoff, $ylen, $xlen);
   # }
+
+  method resize_marginalized {
+    ncplane_resize_marginalized($!p);
+  }
+
+  method resize_maximize {
+    ncplane_resize_maximize($!p);
+  }
+
+  method resize_placewithin {
+    ncplane_resize_placewithin($!p);
+  }
+
   #
   # method ncplane_rotate_ccw (ncplane $n) {
   #   ncplane_rotate_ccw($!p);
@@ -1288,17 +1320,7 @@ class Terminal::NotCurses::Plane {
   #   ncplane_dim_yexport($!p);
   # }
   #
-  # method ncplane_perimeterexport (
-  #   ncplane $n,
-  #   nccell  $ul,
-  #   nccell  $ur,
-  #   nccell  $ll,
-  #   nccell  $lr,
-  #   nccell  $hline,
-  #   nccell  $vline
-  # ) {
-  #   ncplane_perimeterexport($!p, $ul, $ur, $ll, $lr, $hline, $vline);
-  # }
+
   #
   # method ncplane_putchar_yxexport (
   #   ncplane $n,
@@ -1402,5 +1424,9 @@ class Terminal::NotCurses::Plane {
   # ) {
   #   ncplane_vprintfexport($!p, $format, $ap);
   # }
+
+  method set_name (Str() $name) {
+    ncplane_set_name($!p, $name);
+  }
 
 }

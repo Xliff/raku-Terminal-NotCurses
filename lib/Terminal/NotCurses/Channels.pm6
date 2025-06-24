@@ -94,10 +94,12 @@ class Terminal::NotCurses::Channels {
   }
 
   method bg_rgb8 ($r is rw, $g is rw, $b is rw, :$raw = False) {
-    my int32 ($rr, $gg, $bb) = 0 xx 3;
+    my uint32 ($rr, $gg, $bb) = 0 xx 3;
 
     ncchannels_bg_rgb8($!cc[0], $rr, $gg, $bb);
-    ($r = $rr, $g = $gg, $b = $bb);
+    my @rgb = ($r = $rr, $g = $gg, $b = $bb);
+    return @rgb if $raw;
+    self;
   }
 
   method bg_rgb_p {
@@ -126,7 +128,12 @@ class Terminal::NotCurses::Channels {
     ncchannels_fg_alpha( $!cc[0] );
   }
 
-  method fg_default_p {
+  method fg_default_p
+    is also<
+      fg-is-default
+      fg_is_default
+    >
+  {
     ncchannels_fg_default_p( $!cc[0] );
   }
 
@@ -141,7 +148,7 @@ class Terminal::NotCurses::Channels {
   }
 
   method fg_rgb8 ($r is rw, $g is rw, $b is rw, :$raw = False) {
-    my int32 ($rr, $gg, $bb) = 0 xx 3;
+    my uint32 ($rr, $gg, $bb) = 0 xx 3;
 
     ncchannels_fg_rgb8($!cc[0], $rr, $gg, $bb);
     my @rgb = ($r = $rr, $g = $gg, $b = $bb);
@@ -189,19 +196,23 @@ class Terminal::NotCurses::Channels {
   }
 
   method set_bg_rgb8_clipped (Int() $r, Int() $g, Int() $b) {
-    my int32 ($rr, $gg, $bb) = ($r, $g, $b);
+    my uint32 ($rr, $gg, $bb) = ($r, $g, $b);
 
     ncchannels_set_bg_rgb8_clipped($!cc, $rr, $gg, $bb);
     self;
   }
 
-  method set_bg_rgb8 {
-    ncchannels_set_bg_rgb8($!cc);
+  method set_bg_rgb8 (Int() $r, Int() $g, Int() $b) {
+    my uint32 ($rr, $gg, $bb) = ($r, $g, $b);
+
+    ncchannels_set_bg_rgb8($!cc, $rr, $gg, $bb);
     self;
   }
 
-  method set_bg_rgb {
-    ncchannels_set_bg_rgb($!cc);
+  method set_bg_rgb (Int() $p) {
+    my uint32 $pp = $p;
+
+    ncchannels_set_bg_rgb($!cc, $p);
     self;
   }
 
@@ -239,19 +250,23 @@ class Terminal::NotCurses::Channels {
   }
 
   method set_fg_rgb8_clipped (Int() $r, Int() $g, Int() $b) {
-    my int32 ($rr, $gg, $bb) = ($r, $g, $b);
+    my uint32 ($rr, $gg, $bb) = ($r, $g, $b);
 
     ncchannels_set_fg_rgb8_clipped($!cc, $rr, $gg, $bb);
     self;
   }
 
-  method set_fg_rgb8 {
-    ncchannels_set_fg_rgb8($!cc);
+  method set_fg_rgb8 (Int() $r, Int() $g, Int() $b) {
+    my uint32 ($rr, $gg, $bb) = ($r, $g, $b);
+
+    ncchannels_set_fg_rgb8($!cc, $rr, $gg, $bb);
     self;
   }
 
-  method set_fg_rgb {
-    ncchannels_set_fg_rgb($!cc);
+  method set_fg_rgb (Int() $p) {
+    my uint32 $pp = $p;
+
+    ncchannels_set_fg_rgb($!cc, $p);
     self;
   }
 

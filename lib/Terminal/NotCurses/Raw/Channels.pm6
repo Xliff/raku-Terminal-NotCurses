@@ -122,9 +122,9 @@ sub ncchannels_fg_palindex (uint64 $channels)
 
 sub ncchannels_fg_rgb8 (
   uint64 $channels,
-  int32  $r         is rw,
-  int32  $g         is rw,
-  int32  $b         is rw
+  uint32 $r         is rw,
+  uint32 $g         is rw,
+  uint32 $b         is rw
 )
   returns uint32
   is      native(notcurses-export)
@@ -139,7 +139,7 @@ sub ncchannels_fg_rgb_p (uint64 $channels)
   is      symbol('ncchannels_fg_rgb_p_export')
 { * }
 
-sub ncchannels_fg_rgb (uint64 $channels)
+sub ncchannels_fg_rgb (uint64 $channels, uint32 $p)
   returns uint32
   is      native(notcurses-export)
   is      export
@@ -186,23 +186,28 @@ sub ncchannels_set_bg_palindex (CArray[uint64] $channels, uint32 $v)
 
 sub ncchannels_set_bg_rgb8_clipped (
   CArray[uint64] $channels,
-  int32          $r,
-  int32          $g,
-  int32          $b
+  uint32         $r,
+  uint32         $g,
+  uint32         $b
 )
   is      native(notcurses-export)
   is      export
   is      symbol('ncchannels_set_bg_rgb8_clipped_export')
 { * }
 
-sub ncchannels_set_bg_rgb8 (CArray[uint64] $channels)
+sub ncchannels_set_bg_rgb8 (
+  CArray[uint64] $channels,
+  uint32         $r,
+  uint32         $g,
+  uint32         $b
+)
   returns int32
   is      native(notcurses-export)
   is      export
   is      symbol('ncchannels_set_bg_rgb8_export')
 { * }
 
-sub ncchannels_set_bg_rgb (CArray[uint64] $channels)
+sub ncchannels_set_bg_rgb (CArray[uint64] $channels, uint32 $p)
   returns int32
   is      native(notcurses-export)
   is      export
@@ -252,23 +257,28 @@ sub ncchannels_set_fg_palindex (CArray[uint64] $channels, uint32 $v)
 
 sub ncchannels_set_fg_rgb8_clipped (
   CArray[uint64] $channels,
-  int32          $r,
-  int32          $g,
-  int32          $b
+  uint32         $r,
+  uint32         $g,
+  uint32         $b
 )
   is      native(notcurses-export)
   is      export
   is      symbol('ncchannels_set_fg_rgb8_clipped_export')
 { * }
 
-sub ncchannels_set_fg_rgb8 (CArray[uint64] $channels)
+sub ncchannels_set_fg_rgb8 (
+  CArray[uint64] $channels,
+  uint32         $r,
+  uint32         $g,
+  uint32         $b
+)
   returns int32
   is      native(notcurses-export)
   is      export
   is      symbol('ncchannels_set_fg_rgb8_export')
 { * }
 
-sub ncchannels_set_fg_rgb (CArray[uint64] $channels)
+sub ncchannels_set_fg_rgb (CArray[uint64] $channels, uint32 $p)
   returns int32
   is      native(notcurses-export)
   is      export

@@ -1,6 +1,7 @@
 use v6;
 
 use NativeCall;
+use Method::Also;
 
 use Terminal::NotCurses::Raw::Types;
 use Terminal::NotCurses::Raw::Channels;
@@ -77,13 +78,18 @@ class Terminal::NotCurses::Channels {
     ncchannels_bg_alpha( $!cc[0] );
   }
 
-  method bg_default_p {
+  method bg_default_p
+    is also<
+      bg_is_default
+      bg-is-default
+    >
+  {
     ncchannels_bg_default_p( $!cc[0] );
   }
 
   method bg_palindex is rw {
     Proxy.new:
-      FETCH => -> $ { ncchannels_bg_palindex_p( $!cc[0] ) },
+      FETCH => -> $ { ncchannels_bg_palindex( $!cc[0] ) },
       STORE => -> $, \v { $.set_bg_palindex(v); v       }
   }
 
@@ -130,7 +136,7 @@ class Terminal::NotCurses::Channels {
 
   method fg_palindex is rw {
     Proxy.new:
-      FETCH => -> $     { ncchannels_fg_palindex_p( $!cc[0] ) },
+      FETCH => -> $     { ncchannels_fg_palindex( $!cc[0] ) },
       STORE => -> $, \v { $.set_fg_palindex(v); v       }
   }
 

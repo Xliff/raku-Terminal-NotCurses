@@ -103,12 +103,11 @@ subtest {
   ok $r.bg_palindex == 8,                 'Background palette index of reversed channels is 8';
   ok $r.fg_palindex == 0,                 'Foreground palette index of reversed channels is 0';
   $r = $r.set_fg_palindex(63).reverse;
-  ok $r.fg_palindex == 8,                 'Foregrpund palette index is now 8';
+  ok $r.fg_palindex == 8,                 'Foreground palette index is now 8';
   ok $r.bg_palindex == 63,                'Background palette index is now 63';
   $r = $r.set_fg_default.set_bg_alpha(NCALPHA_TRANSPARENT).reverse;
   ok $r.fg_palindex == 63,                'Foreground palette index is now 63';
-  ok $r.bg_alpha == NC_ALPHA_TRANSPARENT, 'Background alpha is NC_ALPHA_TRANSPARENT';
-  ok ($r = $r.set_bg_default),            'Background set to default';
+  ok $r.bg-is-default,                    'Background set to default';
   ok $r.bg_alpha == NCALPHA_OPAQUE,       'Background is opaque';
   $r = $r.set_fg_rgb(0x2288cc).reverse;
   ok $r.bg_rgb.Int == 0x2288cc,           'Background RGB is the proper value';

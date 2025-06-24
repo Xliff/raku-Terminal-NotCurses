@@ -36,6 +36,7 @@ sub ncchannels_bg_palindex_p (uint64 $channels)
 { * }
 
 sub ncchannels_bg_palindex (uint64 $channels)
+  returns uint32
   is      native(notcurses-export)
   is      export
   is      symbol('ncchannels_bg_palindex_export')
@@ -113,6 +114,7 @@ sub ncchannels_fg_palindex_p (uint64 $channels)
 { * }
 
 sub ncchannels_fg_palindex (uint64 $channels)
+  returns uint32
   is      native(notcurses-export)
   is      export
   is      symbol('ncchannels_fg_palindex_export')

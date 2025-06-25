@@ -292,6 +292,12 @@ sub notcurses_render (notcurses $nc)
   is      export
 { * }
 
+sub ncplane_options_create
+  returns ncplane_options
+  is      native(notcurses-export)
+  is      export
+{ * }
+
 # sub notcurses_stddim_yx_constexport (
 #   notcurses $nc,
 #   gint      $y is rw,

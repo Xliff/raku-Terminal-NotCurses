@@ -10,6 +10,8 @@
 #include <signal.h>
 #include <limits.h>
 #include <stdbool.h>
+#include <iconv.h>
+#include <errno.h>
 #include <notcurses/notcurses.h>
 
  unsigned
@@ -1669,4 +1671,107 @@ nctabbed_sepchan_export (struct nctabbed* nt){
   uint64_t ch;
   nctabbed_channels(nt, NULL, NULL, &ch);
   return ch;
+}
+
+ncplane_options *ncplane_options_create (void) {
+  ncplane_options *o = (ncplane_options *)malloc(sizeof(ncplane_options));
+  memset(o, 0, sizeof(ncplane_options));
+  return o;
+}
+
+// unsigned
+// channels_blend_export(notcurses* nc, unsigned c1, unsigned c2, unsigned* blends,
+//                uint32_t defchan){
+//   if(ncchannel_alpha(c2) == NCALPHA_TRANSPARENT){
+//     return c1; // do *not* increment *blends
+//   }
+//   if(*blends == 0){
+//     // don't just return c2, or you set wide status and all kinds of crap
+//     if(ncchannel_default_p(c2)){
+//       ncchannel_set_default(&c1);
+//     }else if(ncchannel_palindex_p(c2)){
+//       ncchannel_set_palindex(&c1, ncchannel_palindex(c2));
+//     }else{
+//       ncchannel_set(&c1, ncchannel_rgb(c2));
+//     }
+//   }else if(ncchannel_default_p(c1) && ncchannel_default_p(c2)){
+//     // do nothing, leave as default
+//   }else if((ncchannel_palindex_p(c1) && ncchannel_palindex_p(c2)) &&
+//            ncchannel_palindex(c1) == ncchannel_palindex(c2)){
+//     // do nothing, leave as palette
+//   }else{
+//     unsigned r1, g1, b1;
+//     unsigned r2, g2, b2;
+//     if(ncchannel_default_p(c2)){
+//       ncchannel_rgb8(defchan, &r2, &g2, &b2);
+//     }else if(ncchannel_palindex_p(c2)){
+//       ncchannel_rgb8(nc->palette.chans[ncchannel_palindex(c2)],
+//                      &r2, &g2, &b2);
+//     }else{
+//       ncchannel_rgb8(c2, &r2, &g2, &b2);
+//     }
+//     if(ncchannel_default_p(c1)){
+//       ncchannel_rgb8(defchan, &r1, &g1, &b1);
+//     }else if(ncchannel_palindex_p(c1)){
+//       ncchannel_rgb8(nc->palette.chans[ncchannel_palindex(c1)],
+//                      &r1, &g1, &b1);
+//     }else{
+//       ncchannel_rgb8(c1, &r1, &g1, &b1);
+//     }
+//     unsigned r = (r1 * *blends + r2) / (*blends + 1);
+//     unsigned g = (g1 * *blends + g2) / (*blends + 1);
+//     unsigned b = (b1 * *blends + b2) / (*blends + 1);
+//     ncchannel_set_rgb8(&c1, r, g, b);
+//   }
+//   ncchannel_set_alpha(&c1, ncchannel_alpha(c2));
+//   ++*blends;
+//   return c1;
+// }
+//
+//
+//void center_box(int* y, int* x){
+//  if(y){
+//    *y = (*y - 1) / 2;
+//  }
+//  if(x){
+//    *x = (*x - 1) / 2;
+//  }
+//}
+
+// find the "center" cell of a plane. in the case of even rows/columns, we
+// place the center on the top/left. in such a case there will be one more
+// cell to the bottom/right of the center.
+//void
+//ncplane_center(const ncplane* n, int* y, int* x){
+//  *y = n->leny;
+//  *x = n->lenx;
+//  center_box(y, x);
+//}
+
+unsigned int *utf8to32 (char *inbuf) {
+  // cw: As provided by Google Gemini on Jun 29, 2025
+  iconv_t cd = iconv_open("UTF-32LE", "UTF-8"); // Convert from UTF-8 to UTF-32 Little Endian
+  if (cd == (iconv_t)-1) {
+    perror("iconv_open failed");
+    exit(EXIT_FAILURE);
+  }
+
+  size_t inbytesleft  = strlen(inbuf);
+  size_t outbuf_size  = inbytesleft * 4 + 4; // Estimate for UTF-32 (up to 4 bytes per char)
+  char   *outbuf      = malloc(outbuf_size);
+  char   *outptr      = outbuf;
+  size_t outbytesleft = outbuf_size - 1;
+
+  memset(outbuf, 0, outbuf_size);
+
+  size_t result = iconv(cd, &inbuf, &inbytesleft, &outptr, &outbytesleft);
+
+  if (result == (size_t)-1 ) {
+    //perror("iconv failed");
+    free(outbuf);
+    iconv_close(cd);
+    return NULL;
+  }
+  iconv_close(cd);
+  return (unsigned int *)outbuf;
 }

@@ -72,11 +72,11 @@ sub ncplane_at_cursor_cell (
 { * }
 
 sub ncplane_at_yx (
-  ncplane $n,
-  int32   $y,
-  int32   $x,
-  uint16  $stylemask,
-  uint64  $channels
+  ncplane        $n,
+  int32          $y,
+  int32          $x,
+  CArray[uint16] $stylemask,
+  CArray[uint64] $channels
 )
   returns Str
   is      native(&notcurses)
@@ -217,6 +217,16 @@ sub ncplane_cursor_move_rel (
   is      export
 { * }
 
+sub ncplane_cursor_move_yx (
+  ncplane $n,
+  int32    $y,
+  int32    $x
+)
+  returns int32
+  is      native(&notcurses)
+  is      export
+{ * }
+
 sub ncplane_cursor_x (ncplane $n)
   is      native(notcurses-export)
   is      export
@@ -231,8 +241,8 @@ sub ncplane_cursor_y (ncplane $n)
 
 sub ncplane_cursor_yx (
   ncplane $n,
-  int32    $y is rw,
-  int32    $x is rw
+  uint32  $y is rw,
+  uint32  $x is rw
 )
   is      native(&notcurses)
   is      export
@@ -480,7 +490,8 @@ sub ncplane_halign (
 
 sub ncplane_hline (
   ncplane $n,
-  nccell  $c
+  nccell  $c,
+  uint32  $len
 )
   returns int32
   is      native(notcurses-export)
@@ -982,8 +993,8 @@ sub ncplane_putwc_utf32 (
 
 sub ncplane_putwc_yx (
   ncplane $n,
-  int32    $y,
-  int32    $x,
+  int32   $y,
+  int32   $x,
   wchar_t $w
 )
   returns int32
@@ -1165,7 +1176,10 @@ sub ncplane_rounded_box (
 sub ncplane_rounded_box_sized (
   ncplane $n,
   uint16  $styles,
-  uint64  $channels
+  uint64  $channels,
+  uint32  $y,
+  uint32  $x,
+  uint32  $c
 )
   returns int32
   is      native(notcurses-export)
@@ -1358,8 +1372,8 @@ sub ncplane_set_name (
   is      export
 { * }
 
-sub ncplane_set_scrolling (ncplane $n)
-  returns bool
+sub ncplane_set_scrolling (ncplane $n, uint32 $s)
+  returns int32
   is      native(&notcurses)
   is      export
 { * }

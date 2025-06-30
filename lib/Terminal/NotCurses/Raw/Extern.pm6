@@ -5,6 +5,12 @@ use Terminal::NotCurses::Raw::Structs;
 
 unit package Terminal::NotCurses::Raw::Extern;
 
+sub utf8to32 (Str $utf8)
+  returns CArray[uint32]
+  is      native(notcurses-export)
+  is      export
+{ * }
+
 #
 #
 # ### /home/cbwood/Projects/raku-Terminal-Notcurses/notcurses-extern.h
@@ -318,14 +324,15 @@ sub ncplane_options_create
 #   is      export
 # { * }
 #
-# sub notcurses_term_dim_yxexport (
-#   notcurses $n,
-#   gint      $rows is rw,
-#   gint      $cols is rw
-# )
-#   is      native(&notcurses)
-#   is      export
-# { * }
+sub notcurses_term_dim_yx (
+  notcurses $n,
+  int32     $rows is rw,
+  int32     $cols is rw
+)
+  is      native(notcurses-export)
+  is      export
+  is      symbol('notcurses_term_dim_yx_export')
+{ * }
 #
 # sub notcurses_topexport (&notcurses $n)
 #   returns ncplane

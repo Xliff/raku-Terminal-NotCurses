@@ -3,18 +3,14 @@ use v6;
 use NativeCall;
 use Method::Also;
 
-#use Terminal::NotCurses::Raw::Types;
-use Terminal::NotCurses::Raw::Definitions;
-use Terminal::NotCurses::Raw::Enums;
-use Terminal::NotCurses::Raw::Structs;
 use Terminal::NotCurses::Raw::Extern;
-
+use Terminal::NotCurses::Raw::Types;
 use Terminal::NotCurses::Raw::Plane;
 
 use Proto::Roles::Implementor;
 
 sub create_ncplane_options is export {
-  ncplane_options_create;
+  ncplane_options.new;
 }
 
 class Terminal::NotCurses::Plane {
@@ -48,15 +44,16 @@ class Terminal::NotCurses::Plane {
     ncplane_above($!p);
   }
 
-  method abs_x {
+  method abs_x is also<abs-x> {
     ncplane_abs_x($!p);
   }
 
-  method abs_y {
+  method abs_y is also<abs-y> {
     ncplane_abs_y($!p);
   }
 
   proto method as_rgba (|)
+    is also<as-rgba>
   { * }
 
   multi method as_rgba (
@@ -87,6 +84,7 @@ class Terminal::NotCurses::Plane {
   }
 
   proto method ascii_box (|)
+    is also<ascii-box>
   { * }
 
   multi method ascii_box (Int() $channels, :mask(:$style) = 0) {
@@ -100,6 +98,7 @@ class Terminal::NotCurses::Plane {
   }
 
   proto method at_cursor (|)
+    is also<at-cursor>
   { * }
 
   multi method at_cursor (Int() $channels, :mask(:$style) = 0) {
@@ -112,15 +111,23 @@ class Terminal::NotCurses::Plane {
     ncplane_at_cursor($!p, $s, $c);
   }
 
-  method at_cursor_cell (nccell() $c) {
+  method at_cursor_cell (nccell() $c) is also<at-cursor-cell> {
     ncplane_at_cursor_cell($!p, $c);
   }
 
   proto method at_yx (|)
+    is also<at-yx>
   { * }
 
-  multi method at_yx ($y, $x, $c, :mask(:$style) = 0) {
-    samewith($y, $x, $style, $c);
+  multi method at_yx ($y, $x, :mask(:$style) = 0, :$all = False) {
+    my CArray[uint16] $sa = CArray[uint16].allocate(1);
+    my CArray[uint64] $ca = CArray[uint64].allocate(1);
+    $sa[0] = $style.Int;
+    $ca[0] = 0;
+
+    my $cc = samewith($y, $x, $sa, $ca);
+    return $cc unless $all;
+    ( $cc, $sa[0], $ca[0] );
   }
   multi method at_yx (
     Int()          $y,
@@ -133,7 +140,7 @@ class Terminal::NotCurses::Plane {
     ncplane_at_yx($!p, $yy, $xx, $stylemask, $channels);
   }
 
-  method autogrow_p {
+  method autogrow_p is also<autogrow-p> {
     ncplane_autogrow_p($!p);
   }
 
@@ -149,15 +156,16 @@ class Terminal::NotCurses::Plane {
     ncplane_below($!p);
   }
 
-  method bg_alpha {
+  method bg_alpha is also<bg-alpha> {
     ncplane_bg_alpha($!p);
   }
 
-  method bg_default_p {
+  method bg_default_p is also<bg-default-p> {
     ncplane_bg_default_p($!p);
   }
 
   proto method bg_rgb8 (|)
+    is also<bg-rgb8>
   { * }
 
   multi method bg_rgb8 {
@@ -170,13 +178,14 @@ class Terminal::NotCurses::Plane {
     return Nil unless $rv;
     ($r, $g, $b) = ($rr, $gg, $bb);
   }
-  multi method bg_rgb {
+  multi method bg_rgb is also<bg-rgb> {
     ncplane_bg_rgb($!p);
   }
 
   multi method box (
-           $styles,
-           $channels,
+           $y,
+           $x,
+           $cword                  = 0,
           :$double    is required,
           :$ul        is copy,
           :$ur        is copy,
@@ -184,19 +193,17 @@ class Terminal::NotCurses::Plane {
           :$lr        is copy,
           :$hl        is copy,
           :$vl        is copy,
-    Int() :$attr
+   Int() :$attr,
+   Int() :$channels,
   ) {
-    ($ul, $ur, $ll, $lr, $hl, $vl) //= Terminal::NotCurses::Cells.double_box(
-      $!p,
-      $attr,
-      $channels
-    );
+    ($ul, $ur, $ll, $lr, $hl, $vl) //= $.double_box_cells($attr, $channels);
 
-    samewith($styles, $channels, $ul, $ur, $ll, $lr, $hl, $vl);
+    samewith($ul, $ur, $ll, $lr, $hl, $vl, $y, $x, $cword);
   }
   multi method box (
-           $styles,
-           $channels,
+           $y,
+           $x,
+           $cword                  = 0,
           :$round     is required,
           :$ul        is copy,
           :$ur        is copy,
@@ -204,80 +211,64 @@ class Terminal::NotCurses::Plane {
           :$lr        is copy,
           :$hl        is copy,
           :$vl        is copy,
-    Int() :$attr
+    Int() :$attr,
+    Int() :$channels,
   ) {
-    ($ul, $ur, $ll, $lr, $hl, $vl) //= Terminal::NotCurses::Cells.rounded_box(
-      $!p,
-      $attr,
-      $channels
-    );
+    ($ul, $ur, $ll, $lr, $hl, $vl) //= $.rounded_box_cells($attr, $channels);
 
-    samewith($styles, $channels, $ul, $ur, $ll, $lr, $hl, $vl);
+    samewith($ul, $ur, $ll, $lr, $hl, $vl, $y, $x, $cword);
   }
   multi method box (
-         $styles,
-         $channels,
-        :$light     is required,
-        :$ul        is copy,
-        :$ur        is copy,
-        :$ll        is copy,
-        :$lr        is copy,
-        :$hl        is copy,
-        :$vl        is copy,
-    Int() :$attr
-  ) {
-    ($ul, $ur, $ll, $lr, $hl, $vl) //= Terminal::NotCurses::Cells.light_box(
-      $!p,
-      $attr,
-      $channels
-    );
-
-    samewith($styles, $channels, $ul, $ur, $ll, $lr, $hl, $vl);
-  }
-  multi method box (
-           $styles,
-           $channels,
-          :$heavy     is required,
+           $y,
+           $x,
+           $cword                  = 0,
+          :$light     is required,
           :$ul        is copy,
           :$ur        is copy,
           :$ll        is copy,
           :$lr        is copy,
           :$hl        is copy,
           :$vl        is copy,
-    Int() :$attr
+    Int() :$attr,
+    Int() :$channels,
   ) {
-    ($ul, $ur, $ll, $lr, $hl, $vl) //= Terminal::NotCurses::Cells.heavy_box(
-      $!p,
-      $attr,
-      $channels
+    ($ul, $ur, $ll, $lr, $hl, $vl) //= $.light_box_cells($attr, $channels
     );
 
-    samewith($styles, $channels, $ul, $ur, $ll, $lr, $hl, $vl);
+    samewith($ul, $ur, $ll, $lr, $hl, $vl, $y, $x, $cword);
   }
   multi method box (
-    Int()    $styles,
-    Int()    $channels,
+           $y,
+           $x,
+           $cword                  = 0,
+          :$heavy     is required,
+          :$ul        is copy    ,
+          :$ur        is copy    ,
+          :$ll        is copy    ,
+          :$lr        is copy    ,
+          :$hl        is copy    ,
+          :$vl        is copy    ,
+    Int() :$attr                 ,
+    Int() :$channels
+  ) {
+    ($ul, $ur, $ll, $lr, $hl, $vl) //= $.heavy_box_cells($attr, $channels);
+
+    samewith($ul, $ur, $ll, $lr, $hl, $vl, $y, $x, $cword);
+  }
+  multi method box (
     nccell() $ul,
     nccell() $ur,
     nccell() $ll,
     nccell() $lr,
     nccell() $hl,
-    nccell() $vl
+    nccell() $vl,
+    Int()    $ystop,
+    Int()    $xstop,
+    Int()    $ctlword = 0
   ) {
-    my uint16  $s = $styles;
-    my uint64  $c = $channels;
+    my uint32 ($yy, $xx, $cc) = ($ystop, $xstop, $ctlword);
 
-    ncplane_box($s, $c, $ul, $ur, $ll, $lr, $hl, $vl);
-  }
-  multi method box (
-    nccell() $ul,
-    nccell() $ur,
-    nccell() $ll,
-    nccell() $lr,
-    nccell() $hline,
-    nccell() $vline
-  ) {
-    ncplane_box($!p, $ul, $ur, $ll, $lr, $hline, $vline);
+    ncplane_box($!p, $ul, $ur, $ll, $lr, $hl, $vl, $yy, $xx, $cc);
   }
 
   method box_sized (
@@ -287,11 +278,14 @@ class Terminal::NotCurses::Plane {
     nccell() $lr,
     nccell() $hline,
     nccell() $vline
-  ) {
+  )
+    is also<box-sized>
+  {
     ncplane_box_sized($!p, $ul, $ur, $ll, $lr, $hline, $vline);
   }
 
   proto method center_abs (|)
+    is also<center-abs>
   { * }
 
   multi method center_abs {
@@ -314,33 +308,41 @@ class Terminal::NotCurses::Plane {
     ncplane_contents($!p, $begy, $begx);
   }
 
-  method cursor_move_rel (Int() $y, Int() $x) {
+  method cursor_move_rel (Int() $y, Int() $x) is also<cursor-move-rel> {
     my int32 ($yy, $xx) = ($y, $x);
 
-    ncplane_cursor_move_rel($!p, $y, $x);
+    ncplane_cursor_move_rel($!p, $yy, $xx);
   }
 
-  method cursor_x {
+  method cursor_move_yx (Int() $y, Int() $x) is also<cursor-move-yx> {
+    my int32 ($yy, $xx) = ($y, $x);
+
+    ncplane_cursor_move_yx($!p, $yy, $xx);
+  }
+
+  method cursor_x is also<cursor-x> {
     ncplane_cursor_x($!p);
   }
 
   proto method cursor_yx (|)
+    is also<cursor-yx>
   { * }
 
   multi method cursor_yx {
     samewith($, $);
   }
   multi method cursor_yx ($y is rw, $x is rw) {
-    my int32 ($yy, $xx) = (0, 0);
+    my uint32 ($yy, $xx) = (0, 0);
 
-    ncplane_cursor_yx($!p, $y, $x);
+    ncplane_cursor_yx($!p, $yy, $xx);
+    ($y = $yy, $x = $xx);
   }
 
-  method cursor_y {
+  method cursor_y is also<cursor-y> {
     ncplane_cursor_y($!p);
   }
 
-  method ncplane_descendant_p (ncplane() $ancestor) {
+  method descendant_p (ncplane() $ancestor) is also<descendant-p> {
     so ncplane_descendant_p($!p, $ancestor);
   }
 
@@ -352,15 +354,16 @@ class Terminal::NotCurses::Plane {
     ($.dim_x, $.dim_y)
   }
 
-  method dim_x {
+  method dim_x is also<dim-x> {
     ncplane_dim_x($!p);
   }
 
-  method dim_y {
+  method dim_y is also<dim-y> {
     ncplane_dim_y($!p);
   }
 
   proto method dim_yx (|)
+    is also<dim-yx>
   { * }
 
   multi method dim_yx {
@@ -369,8 +372,7 @@ class Terminal::NotCurses::Plane {
   multi method dim_yx ($y is rw, $x is rw) {
     my int32 ($yy, $xx) = 0 xx 2;
 
-    my $r = ncplane_dim_yx($!p, $yy, $xx);
-    return Nil unless $r;
+    ncplane_dim_yx($!p, $yy, $xx);
     ($y, $x) = ($yy, $xx);
   }
 
@@ -380,7 +382,9 @@ class Terminal::NotCurses::Plane {
     Int() $ylen,
     Int() $xlen,
     Int() $ctlword
-  ) {
+  )
+    is also<double-box-sized>
+  {
     my uint16  $s          =  $styles;
     my uint64  $c          =  $channels;
     my uint32 ($y, $x, $w) = ($ylen, $xlen, $ctlword);
@@ -401,7 +405,9 @@ class Terminal::NotCurses::Plane {
     Int() $xstart,
     Int() $ylen,
     Int() $xlen
-  ) {
+  )
+    is also<erase-region>
+  {
     my int32 ($yy, $xx, $yl, $xl) = ($ystart, $xstart, $ylen, $xlen);
 
     ncplane_erase_region($!p, $yy, $xx, $yl, $xl);
@@ -429,7 +435,9 @@ class Terminal::NotCurses::Plane {
     Int()       $iter,
                 &fader,
     Pointer     $curry  = Pointer
-  ) {
+  )
+    is also<fadein-iteration>
+  {
     my int32 $i = $iter;
 
     ncplane_fadein_iteration($!p, $nctx, $iter, &fader, $curry);
@@ -457,7 +465,9 @@ class Terminal::NotCurses::Plane {
     Int()       $iter,
                 &fader,
     Pointer     $curry  = Pointer
-  ) {
+  )
+    is also<fadeout-iteration>
+  {
     my int32 $i = $iter;
 
     ncplane_fadeout_iteration($!p, $nctx, $iter, &fader, $curry);
@@ -467,15 +477,16 @@ class Terminal::NotCurses::Plane {
     ncplane_fchannel($!p);
   }
 
-  method fg_alpha {
+  method fg_alpha is also<fg-alpha> {
     ncplane_fg_alpha($!p);
   }
 
-  method fg_default_p {
+  method fg_default_p is also<fg-default-p> {
     ncplane_fg_default_p($!p);
   }
 
   proto method fg_rgb8 (|)
+    is also<fg-rgb8>
   { * }
 
   multi method fg_rgb8 {
@@ -489,7 +500,7 @@ class Terminal::NotCurses::Plane {
     ($r, $g, $b) = ($rr, $gg, $bb);
   }
 
-  method fg_rgb {
+  method fg_rgb is also<fg-rgb> {
     ncplane_fg_rgb($!p);
   }
 
@@ -561,8 +572,10 @@ class Terminal::NotCurses::Plane {
     ncplane_halign($!p, $a, $cc);
   }
 
-  method hline (nccell() $c) {
-    ncplane_hline($!p, $c);
+  method hline (nccell() $c, Int() $len) {
+    my uint32 $l = $len;
+
+    ncplane_hline($!p, $c, $l);
   }
 
   method hline_interp (
@@ -570,7 +583,9 @@ class Terminal::NotCurses::Plane {
     Int()    $len,
     Int()    $c1,
     Int()    $c2
-  ) {
+  )
+    is also<hline-interp>
+  {
     my int32   $l          =  $len;
     my uint64 ($cc1, $cc2) = ($c1, $c2);
 
@@ -592,49 +607,49 @@ class Terminal::NotCurses::Plane {
     ncplane_mergedown($!p, $dst, $sy, $sx, $ly, $lx, $dy, $dx);
   }
 
-  method mergedown_simple (ncplane() $dst) {
+  method mergedown_simple (ncplane() $dst) is also<mergedown-simple> {
     ncplane_mergedown_simple($!p, $dst);
   }
 
-  method move_above (ncplane() $above) {
+  method move_above (ncplane() $above) is also<move-above> {
     ncplane_move_above($!p, $above);
   }
 
-  method move_below (ncplane() $below) {
+  method move_below (ncplane() $below) is also<move-below> {
     ncplane_move_below($!p, $below);
   }
 
-  method move_bottom {
+  method move_bottom is also<move-bottom> {
     ncplane_move_bottom($!p);
   }
 
-  method move_family_above (ncplane() $targ) {
+  method move_family_above (ncplane() $targ) is also<move-family-above> {
     ncplane_move_family_above($!p, $targ);
   }
 
-  method move_family_below (ncplane() $targ) {
+  method move_family_below (ncplane() $targ) is also<move-family-below> {
     ncplane_move_family_below($!p, $targ);
   }
 
-  method move_family_bottom {
+  method move_family_bottom is also<move-family-bottom> {
     ncplane_move_family_bottom($!p);
   }
 
-  method move_family_top {
+  method move_family_top is also<move-family-top> {
     ncplane_move_family_top($!p);
   }
 
-  method move_rel (Int() $y, Int() $x) {
+  method move_rel (Int() $y, Int() $x) is also<move-rel> {
     my int32 ($yy, $xx) = ($y, $x);
 
     ncplane_move_rel($!p, $yy, $xx);
   }
 
-  method move_top {
+  method move_top is also<move-top> {
     ncplane_move_top($!p);
   }
 
-  method move_yx (Int() $y, Int() $x) {
+  method move_yx (Int() $y, Int() $x) is also<move-yx> {
     my int32 ($yy, $xx) = ($y, $x);
 
     ncplane_move_yx($!p, $yy, $xx);
@@ -648,15 +663,15 @@ class Terminal::NotCurses::Plane {
     ncplane_notcurses($!p);
   }
 
-  method notcurses_const {
+  method notcurses_const is also<notcurses-const> {
     ncplane_notcurses_const($!p);
   }
 
-  method off_styles {
+  method off_styles is also<off-styles> {
     ncplane_off_styles($!p);
   }
 
-  method on_styles {
+  method on_styles is also<on-styles> {
     ncplane_on_styles($!p);
   }
 
@@ -664,7 +679,7 @@ class Terminal::NotCurses::Plane {
     ncplane_parent($!p);
   }
 
-  method parent_const {
+  method parent_const is also<parent-const> {
     ncplane_parent_const($!p);
   }
 
@@ -672,7 +687,9 @@ class Terminal::NotCurses::Plane {
     Int() $stylemask,
     Int() $channels,
     Int() $ctlword    = 0
-  ) {
+  )
+    is also<perimeter-double>
+  {
     my uint16 $s = $stylemask;
     my uint64 $c = $channels;
     my uint32 $w = $ctlword;
@@ -684,7 +701,9 @@ class Terminal::NotCurses::Plane {
     Int() $stylemask,
     Int() $channels,
     Int() $ctlword    = 0
-  ) {
+  )
+    is also<perimeter-rounded>
+  {
     my uint16 $s = $stylemask;
     my uint64 $c = $channels;
     my uint32 $w = $ctlword;
@@ -707,6 +726,7 @@ class Terminal::NotCurses::Plane {
   }
 
   proto method pixel_geom (|)
+    is also<pixel-geom>
   { * }
 
   multi method pixel_geom {
@@ -728,24 +748,24 @@ class Terminal::NotCurses::Plane {
       ($px, $py, $cx, $cy, $mx, $my)
   }
 
-  method polyfill_yx (Int() $y, Int() $x, nccell() $c) {
+  method polyfill_yx (Int() $y, Int() $x, nccell() $c) is also<polyfill-yx> {
     my int32 ($yy, $xx) = ($y, $x);
 
     ncplane_polyfill_yx($!p, $yy, $xx, $c);
   }
 
-  method printf_aligned (Int() $y, Int() $align, Str() $format) {
+  method printf_aligned (Int() $y, Int() $align, Str() $format) is also<printf-aligned> {
     my int32     $yy = $y;
     my ncalign_e $a  = $align;
 
     ncplane_printf_aligned($!p, $y, $a, $format, Str);
   }
 
-  method printf_stained (Str() $format) {
+  method printf_stained (Str() $format) is also<printf-stained> {
     ncplane_printf_stained($!p, $format, Str);
   }
 
-  method printf_yx (Int() $y, Int() $x, Str() $format) {
+  method printf_yx (Int() $y, Int() $x, Str() $format) is also<printf-yx> {
     my int32 ($yy, $xx) = ($y, $x);
 
     ncplane_printf_yx($!p, $y, $x, $format, Str);
@@ -780,7 +800,7 @@ class Terminal::NotCurses::Plane {
     ncplane_putc($!p, $c);
   }
 
-  method putc_yx (Int() $y, Int() $x, nccell() $c) {
+  method putc_yx (Int() $y, Int() $x, nccell() $c) is also<putc-yx> {
     my int32 ($yy, $xx) = ($y, $x);
 
     ncplane_putc_yx($!p, $yy, $xx, $c);
@@ -790,20 +810,23 @@ class Terminal::NotCurses::Plane {
     ncplane_putchar($!p, $c);
   }
 
-  method putchar_stained (Str() $c) {
+  method putchar_stained (Str() $c) is also<putchar-stained> {
     ncplane_putchar_stained($!p, $c);
   }
 
   method putegc_stained (
     Str() $gclust,
     Int() $sbytes = $gclust.encode.bytes
-  ) {
+  )
+    is also<putegc-stained>
+  {
     my size_t $s = $sbytes;
 
     ncplane_putegc_stained($!p, $gclust, $s);
   }
 
   proto method putegc_yx (|)
+    is also<putegc-yx>
   { * }
 
   multi method putegc_yx (
@@ -828,6 +851,7 @@ class Terminal::NotCurses::Plane {
   }
 
   proto method putnstr_aligned (|)
+    is also<putnstr-aligned>
   { * }
 
   multi method putnstr_aligned (
@@ -856,18 +880,20 @@ class Terminal::NotCurses::Plane {
     Int() $y,
     Int() $align,
     Str() $s
-  ) {
+  )
+    is also<putstr-aligned>
+  {
     my int32     $yy = $y;
     my ncalign_e $a  = $align;
 
     ncplane_putstr_aligned($!p, $yy, $a, $s);
   }
 
-  method putstr_stained (Str() $gclusters) {
+  method putstr_stained (Str() $gclusters) is also<putstr-stained> {
     ncplane_putstr_stained($!p, $gclusters);
   }
 
-  method putstr_yx (Int() $y, Int() $x, Str() $gclusters) {
+  method putstr_yx (Int() $y, Int() $x, Str() $gclusters) is also<putstr-yx> {
     my int32 ($yy, $xx) = ($y, $x);
 
     ncplane_putstr_yx($!p, $yy, $xx, $gclusters);
@@ -894,20 +920,40 @@ class Terminal::NotCurses::Plane {
     ncplane_puttext($!p, $y, $a, $text, $b);
   }
 
-  method ncplane_pututf32_yx (Int() $y, Int() $x, Int() $u) {
+  method ncplane_pututf32_yx (Int() $y, Int() $x, Int() $u) is also<ncplane-pututf32-yx> {
     my int32  ($yy, $xx) = ($y, $x);
     my uint32  $uu       =  $u;
 
     ncplane_pututf32_yx($!p, $y, $x, $u);
   }
 
-  method ncplane_putwc_stained (Int() $w) {
+  proto method ncplane_putwc_stained (|)
+    is also<ncplane-putwc-stained>
+  { * }
+
+  multi method ncplane_putwc_stained (Str $s) {
+    samewith( $s.comb.head.ord );
+  }
+  multi method ncplane_putwc_stained (Int $w)  {
     my wchar_t $ww = $w;
 
     ncplane_putwc_stained($!p, $ww);
   }
 
-  method ncplane_putwc_utf32 (
+  proto method putwc_utf32 (|)
+    is also<putwc-utf32>
+  { * }
+
+  multi method putwc_utf32 ($s is copy) {
+    unless $s ~~ Str {
+      X::Proto::InvalidType.new(
+        ":Argument to { &?ROUTINE.name } MUST be Str-compatible!"
+      ).throw unless $s.^can('Str');
+      $s .= Str
+    }
+    samewith( $s.&utf8to32, $ )
+  }
+  multi method putwc_utf32 (
     CArray[wchar_t] $w,
                     $wchars is rw
   ) {
@@ -918,27 +964,52 @@ class Terminal::NotCurses::Plane {
     $r ?? ($wchars = $ww) !! Nil;
   }
 
-  method ncplane_putwc_yx (Int() $y, Int() $x, Int() $w) {
+  method putwc_yx (Int() $y, Int() $x, Int() $w)
+    is also<putwc-yx>
+  {
     my int32   ($yy, $xx) = ($y, $x);
     my wchar_t  $ww       =  $w;
 
     ncplane_putwc_yx($!p, $yy, $xx, $ww);
   }
 
-  method ncplane_putwc (Int() $w) {
+
+  multi method putwc ($s)  {
+    unless $s ~~ Str {
+      X::Proto::InvalidType.new(
+        ":Argument to { &?ROUTINE.name } MUST be Str-compatible!"
+      ).throw unless $s.^can('Str');
+      $s .= Str
+    }
+    nextsame($s.comb.head.ord);
+  }
+  multi method putwc (Int $w)  {
     my wchar_t $ww = $w;
 
     ncplane_putwc($!p, $ww);
   }
 
   proto method putwegc_stained (|)
+    is also<putwegc-stained>
   { * }
 
-  multi method putwegc_stained ($s, :$size, :$encoding = 'utf8') {
-    my $b  = $s.encode($encoding);
-    my $ca = CArray[uint64].new( |$b, 0 );
+  multi method putwegc_stained (
+     $s,
+    :$size     is copy,
+    :$encoding          = 'utf8',
+    :$auto              = False
+  ) {
+    unless $s ~~ Str {
+      X::Proto::InvalidType.new(
+        ":Argument to { &?ROUTINE.name } MUST be Str-compatible!"
+      ).throw unless $s.^can('Str');
+      $s .= Str
+    }
 
-    samewith($ca, $size // $ca.elems);
+    $s = $s.&utf8to32;
+    $size //= $s.&nullTerminatedArraySize;
+
+    samewith($s, $size);
   }
   multi method putwegc_stained (
     CArray[wchar_t] $gclust,
@@ -949,16 +1020,21 @@ class Terminal::NotCurses::Plane {
     ncplane_putwegc_stained($!p, $gclust, $s);
   }
 
-  proto method ncplane_putwegc (|)
+  proto method putwegc (|)
+    is also<ncplane-putwegc>
   { * }
 
-  multi method ncplane_putwegc (Str() $str, :$encoding = 'utf8') {
-    samewith(
-      CArray[uint64].new( $str.encode($encoding) ),
-      $
-    );
+  multi method putwegc ($s) {
+    unless $s ~~ Str {
+      X::Proto::InvalidType.new(
+        ":Argument to { &?ROUTINE.name } MUST be Str-compatible!"
+      ).throw unless $s.^can('Str');
+      $s .= Str
+    }
+
+    samewith($s.&utf8to32, $);
   }
-  multi method ncplane_putwegc (
+  multi method putwegc (
     CArray[wchar_t] $gclust,
                     $sbytes is rw
   ) {
@@ -970,34 +1046,34 @@ class Terminal::NotCurses::Plane {
   }
 
   proto method putwstr_stained (|)
+    is also<putwstr-stained>
   { * }
 
-  multi method putwstr_stained (Str $str, :$encoding = 'utf8') {
-    my $b  = $str.encode($encoding);
-    my $ca = CArray[uint64].new( |$b, 0 );
-
-    samewith($ca);
+  multi method putwstr_stained (Str $str) {
+    samewith( $str.&utf8to32 );
   }
   multi method putwstr_stained (CArray[wchar_t] $gclustarr) {
     ncplane_putwstr_stained($!p, $gclustarr);
   }
 
   proto method putwstr_aligned (|)
+    is also<putwstr-aligned>
   { * }
 
   multi method putwstr_aligned (
-     $y,
-     $str,
-    :$align,
-    :$encoding = 'utf8',
-    :$size     = $str.encode($encoding).bytes
+           $y,
+    Str()  $str,
+          :$align,
+          :$size   is copy
   ) {
-    samewith($y, $align, $size, $str);
+    my $wstr = $str.&utf8to32;
+
+    samewith($y, $align, $size, $wstr);
   }
   multi method putwstr_aligned (
-    Int() $y,
-    Int() $align,
-    Str() $str
+    Int()           $y,
+    Int()           $align,
+    CArray[wchar_t] $str
   ) {
     my int32     $yy = $y;
     my ncalign_e $a  = $align;
@@ -1006,15 +1082,13 @@ class Terminal::NotCurses::Plane {
   }
 
   proto method putwstr_yx (|)
+    is also<putwstr-yx>
   { * }
 
-  multi method putwstr_yx ($y, $x, $str, :$encoding = 'utf8') {
-    my $b  = $str.encode($encoding);
-    my $ca = CArray[uint64].new( |$b, 0 );
-
-    samewith($y, $x, $ca)
+  multi method putwstr_yx ($y, $x, $str) {
+    samewith($y, $x, $str.&utf8to32)
   }
-  multi method putwstr_yx (Int() $y, Int() $x, CArray[uint64] $wstr) {
+  multi method putwstr_yx (Int() $y, Int() $x, CArray[wchar_t] $wstr) {
     my int32 ($yy, $xx) = ($y, $x);
 
     ncplane_putwstr_yx($!p, $yy, $xx, $wstr);
@@ -1023,13 +1097,10 @@ class Terminal::NotCurses::Plane {
   proto method putwstr (|)
   { * }
 
-  multi method putwstr (Str $str, :$encoding = 'utf8') {
-    my $b  = $str.encode($encoding);
-    my $ca = CArray[uint64].new( |$b, 0 );
-
-    samewith($ca);
+  multi method putwstr (Str() $str) {
+    samewith( $str.&utf8to32 );
   }
-  multi method putwstr (CArray[uint64] $gclustarr) {
+  multi method putwstr (CArray[wchar_t] $gclustarr) {
     ncplane_putwstr($!p, $gclustarr);
   }
 
@@ -1037,8 +1108,8 @@ class Terminal::NotCurses::Plane {
     Str    $data,
     Int    $ymax       is rw,
     Int    $xmax       is rw,
-          :$encoding        = 'utf8',
-    Int() :size(:$len)      = $data.encode($encoding).bytes
+          :$encoding          = 'utf8',
+    Int() :size(:$len)        = $data.encode($encoding).bytes
   ) {
     my $b  = $data.encode($encoding);
     my $ca = nativecast(
@@ -1067,7 +1138,9 @@ class Terminal::NotCurses::Plane {
     ncplane_reparent($!p, $newparent);
   }
 
-  method ncplane_reparent_family (ncplane() $newparent) {
+  method ncplane_reparent_family (ncplane() $newparent)
+    is also<ncplane-reparent-family>
+  {
     ncplane_reparent_family($!p, $newparent);
   }
 
@@ -1084,15 +1157,15 @@ class Terminal::NotCurses::Plane {
   #   ncplane_resize($!p, $keepy, $keepx, $keepleny, $keeplenx, $yoff, $xoff, $ylen, $xlen);
   # }
 
-  method resize_marginalized {
+  method resize_marginalized is also<resize-marginalized> {
     ncplane_resize_marginalized($!p);
   }
 
-  method resize_maximize {
+  method resize_maximize is also<resize-maximize> {
     ncplane_resize_maximize($!p);
   }
 
-  method resize_placewithin {
+  method resize_placewithin is also<resize-placewithin> {
     ncplane_resize_placewithin($!p);
   }
 
@@ -1140,9 +1213,11 @@ class Terminal::NotCurses::Plane {
   #   ncplane_set_base_cell($!p, $c);
   # }
   #
-  # method ncplane_set_scrolling (ncplane $n) {
-  #   ncplane_set_scrolling($!p);
-  # }
+  method set_scrolling (Int() $s) is also<set-scrolling> {
+    my uint32 $ss = $s;
+
+    ncplane_set_scrolling($!p, $s);
+  }
   #
   # method ncplane_set_userptr (Pointer $opaque) {
   #   ncplane_set_userptr($!p, $opaque);
@@ -1260,13 +1335,13 @@ class Terminal::NotCurses::Plane {
   #   ncplane_set_fg_palindex($!p);
   # }
   #
-  method set_fg_rgb (Int() $channel) {
+  method set_fg_rgb (Int() $channel) is also<set-fg-rgb> {
     my uint32 $c = $channel;
 
     ncplane_set_fg_rgb($!p, $c);
   }
 
-  method set_fg_rgb8 (Int() $r, Int() $g, Int() $b) {
+  method set_fg_rgb8 (Int() $r, Int() $g, Int() $b) is also<set-fg-rgb8> {
     my uint32 ($rr, $gg, $bb) = ($r, $g, $b);
 
     ncplane_set_fg_rgb8($!p, $rr, $gg, $bb);
@@ -1371,13 +1446,22 @@ class Terminal::NotCurses::Plane {
   #   ncplane_resize_simpleexport($!p);
   # }
   #
-  # method ncplane_rounded_box_sizedexport (
-  #   ncplane  $n,
-  #   uint16_t $styles,
-  #   uint64_t $channels
-  # ) {
-  #   ncplane_rounded_box_sizedexport($!p, $styles, $channels);
-  # }
+  method rounded_box_sized (
+    Int() $styles,
+    Int() $channels,
+    Int() $ylen,
+    Int() $xlen,
+    Int() $ctlword
+  )
+    is also<rounded-box-sized>
+  {
+    my uint16 $s = $styles;
+    my uint64 $c = $channels;
+
+    my uint32 ($y, $x, $cc) = ($ylen, $xlen, $ctlword);
+
+    ncplane_rounded_box_sized($!p, $s, $c, $y, $x, $cc);
+  }
   #
   # method ncplane_rounded_boxexport (
   #   ncplane  $n,
@@ -1425,8 +1509,44 @@ class Terminal::NotCurses::Plane {
   #   ncplane_vprintfexport($!p, $format, $ap);
   # }
 
-  method set_name (Str() $name) {
+  method set_name (Str() $name) is also<set-name> {
     ncplane_set_name($!p, $name);
   }
 
+  method vline (nccell() $c, Int() $len) {
+    my uint32 $l = $len;
+
+    ncplane_vline($!p, $c, $l);
+  }
+
+  # cw: QoL imports from Terminal::NotCurses::Cells since they require a Plane
+  #     argument
+
+  use Terminal::NotCurses::Cells;
+
+  constant CC = Terminal::NotCurses::Cells;
+
+  method ascii_box_cells ($attr, $channels, :$raw = False) {
+    CC.ascii_box($!p, $attr, $channels, :$raw);
+  }
+
+  method double_box_cells ($attr, $channels, :$raw = False) {
+    CC.double_box($!p, $attr, $channels, :$raw);
+  }
+
+  method heavy_box_cells ($attr, $channels, :$raw = False) {
+    CC.heavy_box($!p, $attr, $channels, :$raw);
+  }
+
+  method light_box_cells ($attr, $channels, :$raw = False) {
+    CC.light_box($!p, $attr, $channels, :$raw);
+  }
+
+  # method load_box ($attr, $channels, :$raw = False) {
+  #   CC.load_box($!p, $attr, $channels, :$raw);
+  # }
+
+  method rounded_box_cells ($attr, $channels, :$raw = False) {
+    CC.rounded_box($!p, $attr, $channels, :$raw);
+  }
 }

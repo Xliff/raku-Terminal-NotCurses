@@ -9,5 +9,6 @@ BEGIN {
     Terminal::NotCurses::Raw::Definitions
     Terminal::NotCurses::Raw::Enums
     Terminal::NotCurses::Raw::Structs
+    Terminal::NotCurses::Raw::Subs
   >;
 }

@@ -23,7 +23,21 @@ class Terminal::NotCurses::Cell {
     $cell ?? self.bless( :$cell ) !! Nil;
   }
   multi method new {
-    self.bless;
+    samewith(nccell.new);
+  }
+
+  # cw: Until a better alternative can be found.
+  sub nc_wcwidth (uint32)
+    returns uint32
+    is      native("c",v6)
+    is      export
+    is      symbol('wcwidth')
+  { * }
+
+  multi method new (Str() $s) {
+    my ($c, $o) = ($s.comb.head.ord, nccell.new);
+    ( $o.gcluster, $o.width ) = ( $c, nc_wcwidth($c) );
+    samewith($o);
   }
 
   method bchannel {
@@ -132,6 +146,10 @@ class Terminal::NotCurses::Cell {
     nccell_init($!c);
   }
 
+  method load (ncplane() $n, Str() $str) {
+    nccell_load($n, $!c, $str);
+  }
+
   method load_char (ncplane() $n, Str() $ch) {
     nccell_load_char($n, $!c, $ch);
   }
@@ -170,6 +188,10 @@ class Terminal::NotCurses::Cell {
     my uint64 $c = $channels;
 
     nccell_prime($n, $!c, $gcluster, $s, $c);
+  }
+
+  method release (ncplane() $p) {
+    nccell_release($p, $!c);
   }
 
   method set_bchannel (Int() $channel) {

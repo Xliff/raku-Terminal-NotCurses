@@ -46,6 +46,16 @@ class Terminal::NotCurses::Main {
     self.bless;
   }
 
+  multi method dim_yx {
+    samewith($, $);
+  }
+  multi method dim_yx ($rows is rw, $cols is rw) {
+    my int32 ($r, $c) = 0 xx 2;
+
+    notcurses_term_dim_yx($NC, $r, $c);
+    ($rows = $r, $cols = $c);
+  }
+
   method stop {
     notcurses_stop($NC)
   }

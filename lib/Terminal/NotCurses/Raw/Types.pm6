@@ -13,6 +13,7 @@ need Proto::Subs;
 need Terminal::NotCurses::Raw::Definitions;
 need Terminal::NotCurses::Raw::Enums;
 need Terminal::NotCurses::Raw::Structs;
+need Terminal::NotCurses::Raw::Subs;
 
 BEGIN {
   proto-re-export($_) for |@proto-exports, |@notcurses-exports;

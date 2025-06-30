@@ -1,0 +1,12 @@
+prefix=Terminal::NotCurses
+struct-prefix=nc
+modules=Terminal::NotCurses::Raw::Types
+backups=backup,bitbucket,google-backup,azure-backup,hut,berg
+hfile-prefix=
+lib=notcurses
+include-directory=/home/cbwood/Projects/notcurses/include/notcurses
+exec=p6gtkexec
+subprefixes=
+idir-avail=True
+extension=.h
+build-exclude=Terminal::NotCurses::Raw::Traps

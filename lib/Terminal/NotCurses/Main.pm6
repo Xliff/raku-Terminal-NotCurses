@@ -68,6 +68,18 @@ class Terminal::NotCurses::Main {
     );
   }
 
+  multi method refresh ( :$all = False ) {
+    samewith($, $, :$all);
+  }
+  multi method refresh ($x is rw, $y is rw, :$all = False) {
+    my int32 ($xx, $yy) = 0 xx 2;
+
+    my $rv = notcurses_refresh($NC, $xx, $yy);
+    ($x = $xx, $y = $yy);
+    return $rv unless $all;
+    ($rv, $x, $y);
+  }
+
   method render {
     notcurses_render($NC);
   }

@@ -413,32 +413,6 @@
     ncplane_vprintf_yx($n, $y, $x, $format, $ap);
   }
 
-  method ncprogbar_create (
-    ncplane           $n,
-    ncprogbar_options $opts
-  ) {
-    ncprogbar_create($n, $opts);
-  }
-
-  method ncprogbar_destroy (ncprogbar $n) {
-    ncprogbar_destroy($n);
-  }
-
-  method ncprogbar_plane (ncprogbar $n) {
-    ncprogbar_plane($n);
-  }
-
-  method ncprogbar_progress (ncprogbar $n) {
-    ncprogbar_progress($n);
-  }
-
-  method ncprogbar_set_progress (
-    ncprogbar $n,
-    gdouble   $p
-  ) {
-    ncprogbar_set_progress($n, $p);
-  }
-
   method ncreader_clear (ncreader $n) {
     ncreader_clear($n);
   }

@@ -106,40 +106,6 @@ unit package Termninal::NotCurses::Raw::Orig;
 
 
 #
-# sub ncprogbar_create (
-#   ncplane           $n,
-#   ncprogbar_options $opts
-# )
-#   returns ncprogbar
-#   is      native(notcurses)
-#   is      export
-# { * }
-#
-# sub ncprogbar_destroy (ncprogbar $n)
-#   is      native(notcurses)
-#   is      export
-# { * }
-#
-# sub ncprogbar_plane (ncprogbar $n)
-#   returns ncplane
-#   is      native(notcurses)
-#   is      export
-# { * }
-#
-# sub ncprogbar_progress (ncprogbar $n)
-#   returns double
-#   is      native(notcurses)
-#   is      export
-# { * }
-#
-# sub ncprogbar_set_progress (
-#   ncprogbar $n,
-#   gdouble   $p
-# )
-#   returns gint
-#   is      native(notcurses)
-#   is      export
-# { * }
 #
 # sub ncreader_clear (ncreader $n)
 #   returns gint
@@ -717,16 +683,16 @@ unit package Termninal::NotCurses::Raw::Orig;
 #   is      export
 # { * }
 #
-# sub notcurses_refresh (
-#   notcurses $n,
-#   gint      $y is rw,
-#   gint      $x is rw
-# )
-#   returns gint
-#   is      native(notcurses)
-#   is      export
-# { * }
-#
+sub notcurses_refresh (
+  notcurses $n,
+  int32     $y is rw,
+  int32     $x is rw
+)
+  returns int32
+  is      native(&notcurses)
+  is      export
+{ * }
+
 sub notcurses_stdplane (notcurses $nc)
   returns ncplane
   is      native(&notcurses)

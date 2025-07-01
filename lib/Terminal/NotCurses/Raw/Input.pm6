@@ -22,6 +22,12 @@ sub ncinput_capslock_p (ncinput $n)
   is      symbol('ncinput_capslock_p_export')
 { * }
 
+sub ncinput_create
+  returns ncinput
+  is      native(notcurses-export)
+  is      export
+{ * }
+
 sub ncinput_ctrl_p (ncinput $n)
   returns bool
   is      native(notcurses-export)

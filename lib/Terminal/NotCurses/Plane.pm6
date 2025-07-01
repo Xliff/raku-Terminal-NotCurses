@@ -33,8 +33,53 @@ class Terminal::NotCurses::Plane {
   multi method new (ncplane_options $o) {
     self.create(ncplane, $o);
   }
+  multi method new (
+    ncplane()  $plane,
+    Int()     :$x        is required,
+    Int()     :$y        is required,
+    Int()     :r(:$rows)                               = 1,
+    Int()     :c(:$cols)                               = 1,
+    Str()     :$name                                   = '',
+    Int()     :$flags                                  = 0,
+    Int()     :margin-right(:margin_right(:$right))    = 0,
+    Int()     :margin-bottom(:margin_bottom(:$bottom)) = 0
+  ) {
+    my $no = ncplane_options.new(
+      :$x,
+      :$y,
+      :$rows,
+      :$cols,
+      :$name,
+      :$flags,
+      margin_r => $right,
+      margin_b => $bottom
+    );
+    self.create($plane, $no);
+  }
 
-  method create (ncplane_options() $nopts) {
+  multi method create (
+    Int()     :$x        is required,
+    Int()     :$y        is required,
+    Int()     :r(:$rows)                               = 1,
+    Int()     :c(:$cols)                               = 1,
+    Str()     :$name                                   = '',
+    Int()     :$flags                                  = 0,
+    Int()     :margin-right(:margin_right(:$right))    = 0,
+    Int()     :margin-bottom(:margin_bottom(:$bottom)) = 0
+  ) {
+    my $no = ncplane_options.new(
+      :$x,
+      :$y,
+      :$rows,
+      :$cols,
+      :$name,
+      :$flags,
+      margin_r => $right,
+      margin_b => $bottom
+    );
+    samewith($no);
+  }
+  multi method create (ncplane_options() $nopts) {
     my $plane = ncplane_create($!p, $nopts);
 
     $plane ?? self.bless( :$plane ) !! Nil;
@@ -1209,9 +1254,9 @@ class Terminal::NotCurses::Plane {
   #   ncplane_set_base($!p, $egc, $stylemask, $channels);
   # }
   #
-  # method ncplane_set_base_cell (nccell() $c) {
-  #   ncplane_set_base_cell($!p, $c);
-  # }
+  method set_base_cell (nccell() $c) {
+    ncplane_set_base_cell($!p, $c);
+  }
   #
   method set_scrolling (Int() $s) is also<set-scrolling> {
     my uint32 $ss = $s;
@@ -1286,12 +1331,13 @@ class Terminal::NotCurses::Plane {
   #   ncplane_set_bg_palindex($!p);
   # }
   #
-  # method ncplane_set_bg_rgb (
-  #   ncplane  $n,
-  #   uint32_t $channel
-  # ) {
-  #   ncplane_set_bg_rgb($!p, $channel);
-  # }
+
+  method set_bg_rgb (Int() $channel) {
+    my uint32 $c = $channel;
+
+    ncplane_set_bg_rgb($!p, $c);
+  }
+
   #
   # method ncplane_set_bg_rgb8 (ncplane $n) {
   #   ncplane_set_bg_rgb8($!p);

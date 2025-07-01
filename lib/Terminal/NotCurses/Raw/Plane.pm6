@@ -1228,10 +1228,7 @@ sub ncplane_set_base (
   is      export
 { * }
 
-sub ncplane_set_base_cell (
-  ncplane $n,
-  nccell  $c
-)
+sub ncplane_set_base_cell (ncplane $n, nccell $c)
   returns int32
   is      native(&notcurses)
   is      export

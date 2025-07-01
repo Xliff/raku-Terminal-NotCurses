@@ -9,11 +9,13 @@ constant NCPALETTESIZE is export = 256;
 
 constant wchar_t is export := uint32;
 
-class ncfadectx is repr<CPointer> is export { }
-class ncmenu    is repr<CPointer> is export { }
-class ncplane   is repr<CPointer> is export { }
-class ncvisual  is repr<CPointer> is export { }
-class notcurses is repr<CPointer> is export { }
+class ncfadectx  is repr<CPointer> is export { }
+class ncmenu     is repr<CPointer> is export { }
+class ncplane    is repr<CPointer> is export { }
+class ncprogbar  is repr<CPointer> is export { }
+class ncreader   is repr<CPointer> is export { }
+class ncvisual   is repr<CPointer> is export { }
+class notcurses  is repr<CPointer> is export { }
 
 class timespec is repr<CStruct> is export {
   has int64 $.tv_sec  is rw;
@@ -33,3 +35,5 @@ our enum ncboxmask_e_enum is export (
   NCBOXCORNER_MASK  => 0x0300,
   NCBOXCORNER_SHIFT => 8
 );
+
+constant NCPROGBAR_OPTION_RETROGRADE is export = 1;

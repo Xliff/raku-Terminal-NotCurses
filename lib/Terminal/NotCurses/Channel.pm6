@@ -50,7 +50,8 @@ class Terminal::NotCurses::Channel {
   }
   multi method new (Int() $r, Int() $g, Int() $b) {
     my $o = self.new;
-    $o.rgb8($r, $g, $b);
+    $o.set_rgb8($r, $g, $b);
+    $o;
   }
 
   multi method a ( :$shift = False )  is rw {

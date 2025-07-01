@@ -215,6 +215,15 @@ class ncvgeom is repr<CStruct> is export {
   has ncblitter_e $.blitter   is rw;
 }
 
+class ncprogbar_options is repr<CStruct> is export {
+  has uint32 $.ulchannel is rw;
+  has uint32 $.urchannel is rw;
+  has uint32 $.blchannel is rw;
+  has uint32 $.brchannel is rw;
+  has uint64 $.flags     is rw;
+}
+
+
 # class ncreel_options is repr<CStruct> is export {
 #   unsigned bordermask;
 #   uint64 borderchan;

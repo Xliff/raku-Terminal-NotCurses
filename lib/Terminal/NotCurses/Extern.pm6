@@ -342,48 +342,7 @@
   #   ncchannels_set_fg_rgbexport($channels);
   # }
   #
-  # method ncinput_alt_pexport (ncinput $n) {
-  #   ncinput_alt_pexport($n);
-  # }
-  #
-  # method ncinput_capslock_pexport (ncinput $n) {
-  #   ncinput_capslock_pexport($n);
-  # }
-  #
-  # method ncinput_ctrl_pexport (ncinput $n) {
-  #   ncinput_ctrl_pexport($n);
-  # }
-  #
-  # method ncinput_equal_pexport (
-  #   ncinput $n1,
-  #   ncinput $n2
-  # ) {
-  #   ncinput_equal_pexport($n1, $n2);
-  # }
-  #
-  # method ncinput_hyper_pexport (ncinput $n) {
-  #   ncinput_hyper_pexport($n);
-  # }
-  #
-  # method ncinput_meta_pexport (ncinput $n) {
-  #   ncinput_meta_pexport($n);
-  # }
-  #
-  # method ncinput_nomod_pexport (ncinput $ni) {
-  #   ncinput_nomod_pexport($ni);
-  # }
-  #
-  # method ncinput_numlock_pexport (ncinput $n) {
-  #   ncinput_numlock_pexport($n);
-  # }
-  #
-  # method ncinput_shift_pexport (ncinput $n) {
-  #   ncinput_shift_pexport($n);
-  # }
-  #
-  # method ncinput_super_pexport (ncinput $n) {
-  #   ncinput_super_pexport($n);
-  # }
+
   #
   # method nciprefixexport (
   #   uintmax_t $val,

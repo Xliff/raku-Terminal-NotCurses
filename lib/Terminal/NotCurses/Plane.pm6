@@ -33,6 +33,12 @@ class Terminal::NotCurses::Plane {
   multi method new (ncplane_options $o) {
     self.create(ncplane, $o);
   }
+  multi method new (Int() $x, Int() $y, Int() $rows, Int() $cols) {
+    self.create( :$x, :$y, :$rows, :$cols );
+  }
+  multi method new (Int() $rows, Int() $cols) {
+    self.create( x => 0, y => 0, :$rows, :$cols );
+  }
   multi method new (
     ncplane()  $plane,
     Int()     :$x        is required,

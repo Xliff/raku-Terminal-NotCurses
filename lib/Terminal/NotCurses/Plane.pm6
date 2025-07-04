@@ -8,6 +8,7 @@ use Terminal::NotCurses::Raw::Types;
 use Terminal::NotCurses::Raw::Plane;
 
 use Proto::Roles::Implementor;
+use Terminal::NotCurses::Cell;
 
 sub create_ncplane_options is export {
   ncplane_options.new;
@@ -189,6 +190,24 @@ class Terminal::NotCurses::Plane {
     my int32 ($yy, $xx) = ($y, $x);
 
     ncplane_at_yx($!p, $yy, $xx, $stylemask, $channels);
+  }
+
+  proto method at_yx_cell (|)
+    is also<at-yx-cell>
+  { * }
+
+  multi method at_yx_cell ($y, $x, :$all = False, :$raw = False) {
+    my $c = nccell.new;
+
+    my $rv = samewith($y, $x, $c);
+    $c = Terminal::NotCurses::Cell.new($c) unless $raw;
+    return $c unless $all;
+    ($rv, $c);
+  }
+  multi method at_yx_cell (Int() $y, Int() $x, nccell() $c) {
+    my int32 ($yy, $xx) = ($y, $x);
+
+    ncplane_at_yx_cell($!p, $yy, $xx, $c);
   }
 
   method autogrow_p is also<autogrow-p> {
@@ -569,7 +588,52 @@ class Terminal::NotCurses::Plane {
     ncplane_format($!p, $y, $x, $yl, $xl, $s);
   }
 
-  method gradient (
+  multi method gradient (
+    Int()  $y,
+    Int()  $x,
+    Int()  $ylen,
+    Int()  $xlen,
+    Str()  $egc,
+    Int()  $styles,
+    Int()  $c
+  ) {
+    samewith(
+      $y,
+      $x,
+      $ylen,
+      $xlen,
+      $egc,
+      $styles,
+      $c,
+      $c,
+      $c,
+      $c
+    );
+  }
+  multi method gradient (
+    Int()  $y,
+    Int()  $x,
+    Int()  $ylen,
+    Int()  $xlen,
+    Str()  $egc,
+    Int()  $styles,
+    Int()  $c1,
+    Int()  $c2
+  ) {
+    samewith(
+      $y,
+      $x,
+      $ylen,
+      $xlen,
+      $egc,
+      $styles,
+      $c1,
+      $c1,
+      $c2,
+      $c2
+    );
+  }
+  multi method gradient (
     Int()  $y,
     Int()  $x,
     Int()  $ylen,

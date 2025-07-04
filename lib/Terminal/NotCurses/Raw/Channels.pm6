@@ -139,7 +139,7 @@ sub ncchannels_fg_rgb_p (uint64 $channels)
   is      symbol('ncchannels_fg_rgb_p_export')
 { * }
 
-sub ncchannels_fg_rgb (uint64 $channels, uint32 $p)
+sub ncchannels_fg_rgb (uint64 $channels)
   returns uint32
   is      native(notcurses-export)
   is      export

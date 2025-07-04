@@ -1,12 +1,20 @@
 use v6;
 
 use NativeCall;
+use Method::Also;
 
 use Terminal::NotCurses::Raw::Types;
 use Terminal::NotCurses::Raw::Cell;
 
+use Terminal::NotCurses::Channel;
+
 class Terminal::NotCurses::Cell {
-  has nccell $!c;
+  has nccell $!c handles<
+    gcluster
+    gcluster_backstop gcluster-backstop
+    width
+    stylemask
+  >;
 
   submethod BUILD ( :$cell ) {
     $!c = $cell if $cell;
@@ -17,6 +25,7 @@ class Terminal::NotCurses::Cell {
   }
 
   method Terminal::NotCurses::Raw::Structs::nccell
+    is also<nccell>
   { $!c }
 
   multi method new (nccell $cell) {
@@ -44,23 +53,24 @@ class Terminal::NotCurses::Cell {
     nccell_bchannel($!c);
   }
 
-  method bg_alpha {
+  method bg_alpha is also<bg-alpha> {
     nccell_bg_alpha($!c);
   }
 
-  method bg_default_p {
+  method bg_default_p is also<bg-default-p> {
     nccell_bg_default_p($!c);
   }
 
-  method bg_palindex_p {Terminal::NotCurses::Plane
+  method bg_palindex_p is also<bg-palindex-p> {Terminal::NotCurses::Plane
     nccell_bg_palindex_p($!c);
   }
 
-  method bg_palindex {
+  method bg_palindex is also<bg-palindex> {
     nccell_bg_palindex($!c);
   }
 
   proto method bg_rgb8 (|)
+    is also<bg-rgb8>
   { * }
 
   multi method bg_rgb8 {
@@ -73,7 +83,7 @@ class Terminal::NotCurses::Cell {
     ($r, $g, $b) = ($rr, $gg, $bb)
   }
 
-  method bg_rgb {
+  method bg_rgb is also<bg-rgb> {
     nccell_bg_rgb($!c);
   }
 
@@ -81,15 +91,17 @@ class Terminal::NotCurses::Cell {
     nccellcmp($n1, $!c, $n2, $c2);
   }
 
-  method channels {
-    nccell_channels($!c);
+  method channels ( :$raw = False ) {
+    my $c = nccell_channels($!c);
+    return $c if $raw;
+    Terminal::NotCurses::Channel($c);
   }
 
   method cols {
     nccell_cols($!c);
   }
 
-  method double_wide_p {
+  method double_wide_p is also<double-wide-p> {
     nccell_double_wide_p($!c);
   }
 
@@ -113,21 +125,25 @@ class Terminal::NotCurses::Cell {
     nccell_fchannel($!c);
   }
 
-  method fg_alpha {
+  method fg_alpha is also<fg-alpha> {
     nccell_fg_alpha($!c);
   }
 
-  method fg_default_p {
+  method fg_default_p is also<fg-default-p> {
     nccell_fg_default_p($!c);
   }
 
-  method fg_palindex_p {
+  method fg_palindex_p is also<fg-palindex-p> {
     nccell_fg_palindex_p($!c);
   }
 
-  method fg_palindex {
+  method fg_palindex is also<fg-palindex> {
     nccell_fg_palindex($!c);
   }
+
+  proto method fg_rgb8 (|)
+    is also<fg-rgb8>
+  { * }
 
   multi method fg_rgb8 {
     samewith($, $, $);
@@ -138,7 +154,7 @@ class Terminal::NotCurses::Cell {
     nccell_fg_rgb8($!c, $r, $g, $b);
   }
 
-  method fg_rgb {
+  method fg_rgb is also<fg-rgb> {
     nccell_fg_rgb($!c);
   }
 
@@ -150,29 +166,29 @@ class Terminal::NotCurses::Cell {
     nccell_load($n, $!c, $str);
   }
 
-  method load_char (ncplane() $n, Str() $ch) {
+  method load_char (ncplane() $n, Str() $ch) is also<load-char> {
     nccell_load_char($n, $!c, $ch);
   }
 
-  method load_egc32 (ncplane() $n, Int() $egc) {
+  method load_egc32 (ncplane() $n, Int() $egc) is also<load-egc32> {
     my uint32 $e = $egc;
 
     nccell_load_egc32($n, $!c, $e);
   }
 
-  method load_ucs32 (ncplane() $n, Int() $ucs) {
+  method load_ucs32 (ncplane() $n, Int() $ucs) is also<load-ucs32> {
     my uint32 $u = $ucs;
 
     nccell_load_ucs32($n, $!c, $u);
   }
 
-  method off_styles (Int() $bits) {
+  method off_styles (Int() $bits) is also<off-styles> {
     my uint32 $b = $bits;
 
     nccell_off_styles($!c, $b);
   }
 
-  method on_styles (Int() $bits) {
+  method on_styles (Int() $bits) is also<on-styles> {
     my uint32 $b = $bits;
 
     nccell_on_styles($!c, $b);
@@ -194,93 +210,93 @@ class Terminal::NotCurses::Cell {
     nccell_release($p, $!c);
   }
 
-  method set_bchannel (Int() $channel) {
+  method set_bchannel (Int() $channel) is also<set-bchannel> {
     my uint32 $c = $channel;
 
     nccell_set_bchannel($!c, $c);
   }
 
-  method set_bg_alpha (Int() $val) {
+  method set_bg_alpha (Int() $val) is also<set-bg-alpha> {
     my uint32 $v = $val;
 
     nccell_set_bg_alpha($!c, $v);
   }
 
-  method set_bg_default {
+  method set_bg_default is also<set-bg-default> {
     nccell_set_bg_default($!c);
   }
 
-  method set_bg_palindex (Int() $val) {
+  method set_bg_palindex (Int() $val) is also<set-bg-palindex> {
     my uint32 $v = $val;
 
     nccell_set_bg_palindex($!c, $v);
   }
 
-  method set_bg_rgb8_clipped (Int() $r, Int() $g, Int() $b) {
+  method set_bg_rgb8_clipped (Int() $r, Int() $g, Int() $b) is also<set-bg-rgb8-clipped> {
     my uint32 ($rr, $gg, $bb) = ($r, $g, $b);
 
     nccell_set_bg_rgb8_clipped($!c, $rr, $gg, $bb);
   }
 
-  method set_bg_rgb8 (Int() $r, Int() $g, Int() $b) {
+  method set_bg_rgb8 (Int() $r, Int() $g, Int() $b) is also<set-bg-rgb8> {
     my uint32 ($rr, $gg, $bb) = ($r, $g, $b);
 
     nccell_set_bg_rgb8($!c, $rr, $gg, $bb);
   }
 
-  method set_bg_rgb (Int() $channel) {
+  method set_bg_rgb (Int() $channel) is also<set-bg-rgb> {
     my uint32 $c = $channel;
 
     nccell_set_bg_rgb($!c, $c);
   }
 
-  method set_channels (Int() $channels) {
+  method set_channels (Int() $channels) is also<set-channels> {
     my uint64 $c = $channels;
 
     nccell_set_channels($!c, $c);
   }
 
-  method set_fchannel (Int() $channel) {
+  method set_fchannel (Int() $channel) is also<set-fchannel> {
     my uint32 $c = $channel;
 
     nccell_set_fchannel($!c, $c);
   }
 
-  method set_fg_alpha (Int() $val) {
+  method set_fg_alpha (Int() $val) is also<set-fg-alpha> {
     my uint32 $v = $val;
 
     nccell_set_fg_alpha($!c, $v);
   }
 
-  method set_fg_default {
+  method set_fg_default is also<set-fg-default> {
     nccell_set_fg_default($!c);
   }
 
-  method set_fg_palindex (Int() $val) {
+  method set_fg_palindex (Int() $val) is also<set-fg-palindex> {
     my uint32 $v = $val;
 
     nccell_set_fg_palindex($!c, $v);
   }
 
-  method set_fg_rgb8_clipped (Int() $r, Int() $g, Int() $b) {
+  method set_fg_rgb8_clipped (Int() $r, Int() $g, Int() $b) is also<set-fg-rgb8-clipped> {
     my uint32 ($rr, $gg, $bb) = ($r, $g, $b);
 
     nccell_set_fg_rgb8_clipped($!c, $rr, $gg, $bb);
   }
 
-  method set_fg_rgb8 (Int() $r, Int() $g, Int() $b) {
+  method set_fg_rgb8 (Int() $r, Int() $g, Int() $b) is also<set-fg-rgb8> {
     my uint32 ($rr, $gg, $bb) = ($r, $g, $b);
 
     nccell_set_fg_rgb8($!c, $rr, $gg, $bb);
   }
 
-  method set_fg_rgb (Int() $channel) {
+  method set_fg_rgb (Int() $channel) is also<set-fg-rgb> {
     my uint32 $c = $channel;
 
     nccell_set_fg_rgb($!c, $channel);
   }
 
-  method set_styles (Int() $bits) {
+  method set_styles (Int() $bits) is also<set-styles> {
     my uint32 $b = $bits;
 
     nccell_set_styles($!c, $b);
@@ -294,11 +310,11 @@ class Terminal::NotCurses::Cell {
     nccell_styles($!c);
   }
 
-  method wide_left_p {
+  method wide_left_p is also<wide-left-p> {
     nccell_wide_left_p($!c);
   }
 
-  method wide_right_p {
+  method wide_right_p is also<wide-right-p> {
     nccell_wide_right_p($!c);
   }
 

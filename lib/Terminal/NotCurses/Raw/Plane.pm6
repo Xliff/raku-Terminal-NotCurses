@@ -83,6 +83,17 @@ sub ncplane_at_yx (
   is      export
 { * }
 
+sub ncplane_at_yx_cell (
+  ncplane $n,
+  int32   $y,
+  int32   $x,
+  nccell  $c
+)
+  returns int32
+  is      native(&notcurses)
+  is      export
+{ * }
+
 sub ncplane_autogrow_p (ncplane $n)
   returns bool
   is      native(&notcurses)

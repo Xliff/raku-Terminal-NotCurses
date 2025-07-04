@@ -4,6 +4,7 @@ use Terminal::NotCurses::Raw::Types;
 
 use Terminal::NotCurses::Main;
 use Terminal::NotCurses::Cell;
+use Terminal::NotCurses::Channels;
 use Terminal::NotCurses::Plane;
 
 use Test;
@@ -24,6 +25,11 @@ Test::failure_output() = $output;
 my $nc = Terminal::NotCurses::Main.init( :!stop );
 my $n  = Terminal::NotCurses::Plane.new( Terminal::NotCurses::Main.stdplane );
 
+sub render ($d = 0.5) {
+  ok $nc.render.not,                       'Changes rendered with no errors';
+  sleep $d;
+}
+
 subtest {
   my $c = Terminal::NotCurses::Cell.new;
   ok $n.polyfill-yx( |$n.dim-yx, $c ) < 0,    'Cannot fill plane with NUL char';
@@ -42,17 +48,135 @@ subtest {
   my $c = Terminal::NotCurses::Cell.new('+');
   my $p = $n.new(4, 4);
   ok $p,                                   'Created 4x4 plane successfully';
-  ok $nc.render.not,                       'Changes rendered with no errors';
+  render;
   ok $p.putc_yx(0, 0, $c)     > 0,         'Placed cell at (0, 0)';
   ok $c.load($p, '/')         > 0,         'Loaded cell with "/" character';
   ok $p.polyfill_yx(0, 0, $c) > 0,         'Filled plane with "/" at (0, 0)';
   is $p.at-yx(0, 0), '/',                  'Character at (0, 0) is confirmed to be "/"';
-  ok $nc.render.not,                       'Changes rendered with no errors';
+  render;
   ok $p.destroy.not,                       'Plane destroyed';
-}
+}, 'Polyfill on Glyph';
 
 subtest {
   my $c = Terminal::NotCurses::Cell.new('-');
   ok $n.polyfill-yx(0, 0, $c) > 0,             'Fill stdplane with "-"';
-  ok $nc.render.not,                           'Changes rendered with no errors';
+  render(1);
 }, 'Polyfill StdPlane';
+
+subtest {
+  my $c = Terminal::NotCurses::Cell.new('+');
+  my $p = $n.new(20, 20);
+  ok $p,                                   'Created 20x20 plane successfully';
+  is $p.polyfill-yx(0, 0, $c), 400,        'Filled plane with 400 cells';
+  render;
+  ok $p.destroy.not,                       'Plane destroyed';
+}, 'Polyfill Empty Plane';
+
+subtest {
+  my $c = Terminal::NotCurses::Cell.new('+');
+  my $p = $n.new(4, 4);
+  ok $p,                                   'Created 4x4 plane successfully';
+  ok $p.putc-yx(0, 1, $c) > 0,             'Placed a cell at (0, 1) successfully';
+  ok $p.putc-yx(1, 1, $c) > 0,             'Placed a cell at (1, 1) successfully';
+  ok $p.putc-yx(1, 0, $c) > 0,             'Placed a cell at (1, 0) successfully';
+  is $p.polyfill-yx(0, 0, $c),  1,         'Filled in 1 cell at (0, 0)';
+  is $p.polyfill-yx(2, 2, $c), 12,         'Filled in 12 cells at (2, 2)';
+  render(1);
+  ok $p.destroy.not,                       'Plane destroyed';
+}, 'Polyfill Walled Plane';
+
+subtest {
+  my $c = Terminal::NotCurses::Channels.new;
+  $c.set-fg-rgb(0x40f040);
+  $c.set-bg-rgb(0x40f040);
+  my @d = $n.dim-yx;
+  ok $n.gradient(-1, -1, |@d, 'M', 0, $c) > 0, 'Plane gradient performed successfully';
+  for [X]( |@d.map({ 0 ..^ $_ }) ) -> ($y, $x) {
+    my @yx = $n.at_yx_cell($y, $x, :all);
+    ok @yx.head > 0,                           "Call to .at-yx-cell completed at ({ $y }, { $x })";
+    is @yx.tail.nccell.gcluster.chr, 'M',      'Cell contains an "M" character';
+    ok @yx.tail.stylemask.not,                 'Cell has no stylemask';
+    # cw: -YYY- Non-raw channels aren't showing both values!
+    is @yx.tail.channels(:raw), $c.Int,        'Cell is colored properly';
+  }
+  render(1);
+}, 'Gradient Monochromatic';
+
+subtest {
+  my ($ul, $ll, $ur, $lr) = Terminal::NotCurses::Channels.new xx 4;
+  .bgfg = 0x40f040 for $ul, $ll, $ur, $lr;
+
+  my @d = $n.dim-yx;
+  ok $n.gradient(-1, -1, |@d, 'V', 0, $ul, $ur, $ll, $lr) > 0, 'Plane gradient performed successfully';
+
+  my $lasty;
+  for [X]( |@d.map({ 0 ..^ $_ }) ) -> ($y, $x) {
+    my $lastx;
+    my ($rv, $c) = $n.at_yx_cell($y, $x, :all);
+    ok $rv > 0,                                "Call to .at-yx-cell completed at ({ $y }, { $x })";
+    is $c.nccell.gcluster.chr, 'V',            'Cell contains an "V" character';
+    ok $c.tail.stylemask.not,                  'Cell has no stylemask';
+    if $lastx.defined.not {
+      if $lasty.defined.not {
+        $lasty = $c.channels.Int;
+        is $ul.Int, $c.channels.Int,           'Cell is colored with the UL channel';
+      } else {
+        is $ll.Int, $c.channels.Int,           'Cell is colored with the LL channel';
+      }
+      $lastx = $c.channels.Int;
+    } else {
+      is $lastx, $c.channels.Int,              'Last X-channel compared is the current cell';
+    }
+
+    if $x == @d.tail {
+      $y.not ?? ( is $ur.Int, $c.channels.Int, 'Cell is colored with the UR channel' )
+             !! ( is $lr.Int, $c.channels.Int, 'Cell is colored with the LR channel' );
+    }
+  }
+  render(1);
+}, 'Gradient Vertical';
+
+subtest {
+  my ($ul, $ll, $ur, $lr) = Terminal::NotCurses::Channels.new xx 4;
+  .bgfg = 0x40f040 for $ul, $ll, $ur, $lr;
+
+  my @d = $n.dim-yx;
+  ok $n.gradient(0, 0, |@d, 'H', 0, $ul, $ur, $ll, $lr) > 0, 'Plane gradient performed successfully';
+  render(1);
+}, 'Gradient Horizontal';
+
+subtest {
+  my ($ul, $ll, $ur, $lr) = Terminal::NotCurses::Channels.new xx 4;
+
+  for (
+    $ul, 0x000000, 0xffffff,
+    $ll, 0x40f040, 0x40f040,
+    $ur, 0xf040f0, 0xf040f0,
+    $lr, 0xffffff, 0x000000
+  ) -> $c, $fg, $bg {
+    ($c.fg, $c.bg) = ($fg, $bg);
+  }
+
+  my @d = $n.dim-yx;
+  ok $n.gradient(0, 0, |@d, 'X', 0, $ul, $ur, $ll, $lr) > 0, 'Plane gradient performed successfully';
+  render(1);
+}, 'Gradient X';
+
+subtest {
+  my ($ul, $ll, $ur, $lr) = Terminal::NotCurses::Channels.new xx 4;
+
+  for (
+    [ $ul, 0xffffff, $        ],
+    [ $lr, 0x000000, $        ],
+    [ $ll, 0xffffff, 0xff0000 ],
+    [ $ur, 0xff00ff, 0x00ff00 ]
+  ) -> ($c, $fg, $bg) {
+    .tail.defined.not
+      ?? ( $c.bgfg        = $fg )
+      !! ( ($c.fg, $c.bg) = ($fg, $bg) );
+  }
+
+  my @d = $n.dim-yx;
+  ok $n.gradient(0, 0, |@d, 'S', 0, $ul, $ur, $ll, $lr) > 0, 'Plane gradient performed successfully';
+  render(1);
+}, 'Gradient S';

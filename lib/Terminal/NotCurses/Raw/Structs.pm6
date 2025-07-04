@@ -13,6 +13,8 @@ class nccell is repr<CStruct> is export {
   has uint8  $.width             is rw;
   has uint16 $.stylemask         is rw;
   has uint64 $.channels          is rw;
+
+  method gcluster-backstop is rw { $!gcluster_backstop }
 }
 
 class notcurses_options is repr<CStruct> is export {

@@ -81,6 +81,31 @@ our enum ncscale_e_enum is export <
   NCSCALE_SCALE_HIRES
 >;
 
+constant ncstyle_e is export := uint32;
+our enum ncstyle_e_enum is export (
+  NCSTYLE_MASK      => 0xffff,
+  NCSTYLE_ITALIC    => 0x0010,
+  NCSTYLE_UNDERLINE => 0x0008,
+  NCSTYLE_UNDERCURL => 0x0004,
+  NCSTYLE_BOLD      => 0x0002,
+  NCSTYLE_STRUCK    => 0x0001,
+  NCSTYLE_NONE      => 0
+);
+
+constant nccboxmask_e is export := uint32;
+our enum ncboxmask_e_enum is export (
+  NCBOXMASK_TOP     => 0x0001,
+  NCBOXMASK_RIGHT   => 0x0002,
+  NCBOXMASK_BOTTOM  => 0x0004,
+  NCBOXMASK_LEFT    => 0x0008,
+  NCBOXGRAD_TOP     => 0x0010,
+  NCBOXGRAD_RIGHT   => 0x0020,
+  NCBOXGRAD_BOTTOM  => 0x0040,
+  NCBOXGRAD_LEFT    => 0x0080,
+  NCBOXCORNER_MASK  => 0x0300,
+  NCBOXCORNER_SHIFT => 8
+);
+
 constant ncoption_e is export := uint64;
 our enum ncoption_e_enum is export (
   NCOPTION_INHIBIT_SETLOCALE   => 0x0001,

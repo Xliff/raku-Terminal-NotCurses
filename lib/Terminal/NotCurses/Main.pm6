@@ -46,6 +46,10 @@ class Terminal::NotCurses::Main {
     self.bless;
   }
 
+  method clear {
+    $.stdplane.erase;
+  }
+
   multi method dim_yx {
     samewith($, $);
   }

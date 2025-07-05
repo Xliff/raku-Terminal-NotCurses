@@ -302,12 +302,9 @@ sub ncplane_double_box (
   ncplane $n,
   uint16  $styles,
   uint64  $channels,
-  nccell  $ul,
-  nccell  $ur,
-  nccell  $ll,
-  nccell  $lr,
-  nccell  $hl,
-  nccell  $vl
+  uint32  $ystop,
+  uint32  $xstop,
+  uint32  $ctlword
 )
   returns int32
   is      native(notcurses-export)
@@ -837,7 +834,7 @@ sub ncplane_putchar_yx (
 sub ncplane_putegc (
   ncplane $n,
   Str     $gclust,
-  size_t  $sbytes
+  size_t  $sbytes  is rw
 )
   returns int32
   is      native(notcurses-export)
@@ -857,10 +854,10 @@ sub ncplane_putegc_stained (
 
 sub ncplane_putegc_yx (
   ncplane $n,
-  int32    $y,
-  int32    $x,
+  int32   $y,
+  int32   $x,
   Str     $gclust,
-  size_t  $sbytes
+  size_t  $sbytes  is rw
 )
   returns int32
   is      native(&notcurses)
@@ -1176,7 +1173,10 @@ sub ncplane_rotate_cw (ncplane $n)
 sub ncplane_rounded_box (
   ncplane $n,
   uint16  $styles,
-  uint64  $channels
+  uint64  $channels,
+  uint32  $ystop,
+  uint32  $xstop,
+  uint32  $ctlword
 )
   returns int32
   is      native(notcurses-export)

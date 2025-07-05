@@ -446,6 +446,22 @@ class Terminal::NotCurses::Plane {
     ($y, $x) = ($yy, $xx);
   }
 
+  method double_box (
+    Int() $styles,
+    Int() $channels,
+    Int() $ystop,
+    Int() $xstop,
+    Int() $ctlword    = 0
+  )
+    is also<double-box>
+  {
+    my uint16  $s          =  $styles;
+    my uint64  $c          =  $channels;
+    my uint32 ($y, $x, $w) = ($ystop, $xstop, $ctlword);
+
+    ncplane_double_box($!p, $s, $c, $y, $x, $w);
+  }
+
   method double_box_sized (
     Int() $styles,
     Int() $channels,
@@ -944,25 +960,23 @@ class Terminal::NotCurses::Plane {
     is also<putegc-yx>
   { * }
 
-  multi method putegc_yx (
-     $y,
-     $x,
-     $gclust,
-    :$encoding = 'utf8',
-    :$sbytes   =  $gclust.encode($encoding).bytes
-  ) {
-    samewith($y, $x, $gclust, $sbytes);
+  multi method putegc_yx ($y, $x, $gclust, :$all = False) {
+    my $sb;
+    my $rv = samewith($y, $x, $gclust, $sb);
+    $all.not ?? $rv !! ($rv, $sb);
   }
   multi method putegc_yx (
     Int() $y,
     Int() $x,
     Str() $gclust,
-    Int() $sbytes
+          $sbytes  is rw
   ) {
     my int32  ($yy, $xx) = ($y, $x);
-    my size_t  $s        =  $sbytes;
+    my size_t  $s        =  0;
 
-    ncplane_putegc_yx($!p, $yy, $xx, $gclust, $s);
+    my $rv = ncplane_putegc_yx($!p, $yy, $xx, $gclust, $s);
+    $sbytes = $s;
+    $rv;
   }
 
   proto method putnstr_aligned (|)
@@ -1476,17 +1490,26 @@ class Terminal::NotCurses::Plane {
   #   ncplane_set_styles($!p);
   # }
   #
-  # method ncplane_stain (
-  #   ncplane  $n,
-  #   gint     $y,
-  #   gint     $x,
-  #   ylen     $ul,
-  #   xlen     $ur,
-  #   uint64_t $ll,
-  #   uint64_t $lr
-  # ) {
-  #   ncplane_stain($!p, $y, $x, $ul, $ur, $ll, $lr);
-  # }
+  multi method stain ($y, $x, $ylen, $xlen, $ul) {
+    samewith($y, $x, $ylen, $xlen, $ul, $ul, $ul, $ul);
+  }
+  multi method stain (
+    Int() $y,
+    Int() $x,
+    Int() $ylen,
+    Int() $xlen,
+    Int() $ul,
+    Int() $ur,
+    Int() $ll,
+    Int() $lr
+  ) {
+    my int32  ($yy, $xx) = ($y, $x);
+    my uint32 ($yl, $xl) = ($ylen, $xlen);
+
+    my uint64 ($u1, $u2, $l1, $l2) = ($ul, $ur, $ll, $lr);
+
+    ncplane_stain($!p, $yy, $xx, $yl, $xl, $u1, $u2, $l1, $l2);
+  }
   #
   # method ncplane_vline_interp (
   #   ncplane  $n,
@@ -1522,13 +1545,19 @@ class Terminal::NotCurses::Plane {
   #   ncplane_putchar_yxexport($!p, $y, $x, $c);
   # }
   #
-  # method ncplane_putegcexport (
-  #   ncplane $n,
-  #   Str     $gclust,
-  #   size_t  $sbytes
-  # ) {
-  #   ncplane_putegcexport($!p, $gclust, $sbytes);
-  # }
+  multi method putegc (Str() $gclust, :$all = False) {
+    my $sb;
+
+    my $rv = samewith($gclust, $sb);
+    $all.not ?? $rv !! ($rv, $sb);
+  }
+  multi method putegc (Str() $gclust, $sbytes is rw) {
+    my size_t $s = 0;
+
+    my $rv = ncplane_putegc($!p, $gclust, $s);
+    $sbytes = $s;
+    $rv;
+  }
   #
   # method ncplane_putnstr_yxexport (
   #   ncplane $n,
@@ -1579,13 +1608,22 @@ class Terminal::NotCurses::Plane {
     ncplane_rounded_box_sized($!p, $s, $c, $y, $x, $cc);
   }
   #
-  # method ncplane_rounded_boxexport (
-  #   ncplane  $n,
-  #   uint16_t $styles,
-  #   uint64_t $channels
-  # ) {
-  #   ncplane_rounded_boxexport($!p, $styles, $channels);
-  # }
+  method rounded_box (
+    Int() $styles,
+    Int() $channels,
+    Int() $ystop,
+    Int() $xstop,
+    Int() $ctlword   = 0
+  )
+    is also<rounded-box>
+  {
+    my uint16 $s = $styles;
+    my uint64 $c = $channels;
+
+    my uint32 ($y, $x, $ctl) = ($ystop, $xstop, $ctlword);
+
+    ncplane_rounded_box($!p, $s, $c, $y, $s, $ctl);
+  }
   #
   # method ncplane_valignexport (
   #   ncplane   $n,

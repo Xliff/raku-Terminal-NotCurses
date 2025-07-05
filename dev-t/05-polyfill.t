@@ -6,29 +6,26 @@ use Terminal::NotCurses::Main;
 use Terminal::NotCurses::Cell;
 use Terminal::NotCurses::Channels;
 use Terminal::NotCurses::Plane;
+use Terminal::NotCurses::Testing;
 
 use Test;
 
 plan 4;
 
-# cw: Must render output to file handle.
-my ($output-file, $output);
 
 INIT {
-  $output-file = 'test-polyfill-output.log';
-  $output = $output-file.IO.open( :w );
+  $nc-output-file = 'test-polyfill-output.log';
+  $nc-output      = $nc-output-file.IO.open( :w );
 }
 
-Test::output()         = $output;
-Test::failure_output() = $output;
+my $STDERR = $*ERR;
+Test::output()         = $nc-output;
+Test::failure_output() = $nc-output;
+$*ERR                  = $nc-output;
 
-my $nc = Terminal::NotCurses::Main.init( :!stop );
+$NC = Terminal::NotCurses::Main.init( :!stop );
+
 my $n  = Terminal::NotCurses::Plane.new( Terminal::NotCurses::Main.stdplane );
-
-sub render ($d = 0.5) {
-  ok $nc.render.not,                       'Changes rendered with no errors';
-  sleep $d;
-}
 
 subtest {
   my $c = Terminal::NotCurses::Cell.new;
@@ -60,7 +57,7 @@ subtest {
 subtest {
   my $c = Terminal::NotCurses::Cell.new('-');
   ok $n.polyfill-yx(0, 0, $c) > 0,             'Fill stdplane with "-"';
-  render(1);
+  render;
 }, 'Polyfill StdPlane';
 
 subtest {
@@ -81,7 +78,7 @@ subtest {
   ok $p.putc-yx(1, 0, $c) > 0,             'Placed a cell at (1, 0) successfully';
   is $p.polyfill-yx(0, 0, $c),  1,         'Filled in 1 cell at (0, 0)';
   is $p.polyfill-yx(2, 2, $c), 12,         'Filled in 12 cells at (2, 2)';
-  render(1);
+  render;
   ok $p.destroy.not,                       'Plane destroyed';
 }, 'Polyfill Walled Plane';
 
@@ -99,7 +96,7 @@ subtest {
     # cw: -YYY- Non-raw channels aren't showing both values!
     is @yx.tail.channels(:raw), $c.Int,        'Cell is colored properly';
   }
-  render(1);
+  render;
 }, 'Gradient Monochromatic';
 
 subtest {
@@ -133,7 +130,7 @@ subtest {
              !! ( is $lr.Int, $c.channels.Int, 'Cell is colored with the LR channel' );
     }
   }
-  render(1);
+  render;
 }, 'Gradient Vertical';
 
 subtest {
@@ -142,7 +139,7 @@ subtest {
 
   my @d = $n.dim-yx;
   ok $n.gradient(0, 0, |@d, 'H', 0, $ul, $ur, $ll, $lr) > 0, 'Plane gradient performed successfully';
-  render(1);
+  render;
 }, 'Gradient Horizontal';
 
 subtest {
@@ -159,7 +156,7 @@ subtest {
 
   my @d = $n.dim-yx;
   ok $n.gradient(0, 0, |@d, 'X', 0, $ul, $ur, $ll, $lr) > 0, 'Plane gradient performed successfully';
-  render(1);
+  render;
 }, 'Gradient X';
 
 subtest {
@@ -178,5 +175,43 @@ subtest {
 
   my @d = $n.dim-yx;
   ok $n.gradient(0, 0, |@d, 'S', 0, $ul, $ur, $ll, $lr) > 0, 'Plane gradient performed successfully';
-  render(1);
+  render;
+  $n.erase;
 }, 'Gradient S';
+
+subtest {
+  ok $n.set-fg-rgb(0x444444).not,           'Plane foreground color set successfully';
+  is $n.putegc('A'), 1,                     'Placed an "A" character on the screen';
+  ok $n.set-fg-rgb(0x888888).not,           'Plane foreground color reset successfully';
+  is $n.putegc('B'), 1,                     'Placed an "A" character on the screen';
+  render;
+  ok $n.cursor-move-yx(0, 0).not,           'Cursor moved to (0, 0) successfully';
+  my $c  = Terminal::NotCurses::Cell.new;
+  $c.on-styles(NCSTYLE_BOLD);
+  ok $n.format(0, 0, 0, 0, $c.stylemask),   'Plane formatted with a stylemask';
+  my ($rv, $d) = $n.at-yx-cell(0, 0, :all);
+  is $rv,            1,                     'Retrieved cell at (0, 0)';
+  is $c.stylemask,   $d.stylemask,          'Stylemasks are the same';
+  is $d.fg-rgb.Int,  0x444444,              'Retrieved Cell has the proper foreground color';
+  $n.erase;
+}, 'Format';
+
+subtest {
+  ok $n.set-fg-rgb(0x444444).not,                 'Plane foreground color set successfully';
+  for ^8 X ^8 -> ($y, $x) {
+    is $n.putegc-yx($y, $x, 'A'), 1,              "Placed an 'A' at ({ $y }, { $x })";
+  }
+  my $c = Terminal::NotCurses::Channels.new;
+  $c.set-fg-rgb8(0x88, 0x99, 0x77);
+  ok $n.stain(0, 0, 7, 7, $c),                    '7x7 area of plane stained with foreground color';
+  render;
+  for ^7 X ^7 -> ($y, $x) {
+    my ($rv, $d) = $n.at-yx-cell($y, $x, :all);
+    is $rv,                      1,               "Retrieved cell at ({ $y }, { $x })";
+    is $c.channels.Int,          $d.channels.Int, q<Retrieved cell's channel is the same as reference channel>;
+    is $d.nccell.gcluster.chr,   'A',             'Cell contains an "A" character';
+  }
+  $n.erase;
+}, 'Stain';
+
+Terminal::NotCurses::Main.stop;

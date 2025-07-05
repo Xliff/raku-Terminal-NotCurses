@@ -5,23 +5,27 @@ use Terminal::NotCurses::Raw::Types;
 use Terminal::NotCurses::Main;
 use Terminal::NotCurses::Cells;
 use Terminal::NotCurses::Plane;
+use Terminal::NotCurses::Testing;
 
 use Test;
 
-plan 144;
+plan 20;
 
 # cw: Must render output to file handle.
-my ($output-file, $output);
+
 
 INIT {
-  $output-file = 'test-output.log';
-  $output = $output-file.IO.open( :w );
+  $nc-output-file = 'test-plane-output.log';
+  $nc-output = $nc-output-file.IO.open( :w );
 }
 
-Test::output()         = $output;
-Test::failure_output() = $output;
+my $OLD-ERR = $*ERR;
+Test::output()         = $nc-output;
+Test::failure_output() = $nc-output;
+$*ERR                  = $nc-output;
 
-my $nc = Terminal::NotCurses::Main.init( :!stop );
+$NC = Terminal::NotCurses::Main.init( :!stop );
+
 my $n  = Terminal::NotCurses::Plane.new( Terminal::NotCurses::Main.stdplane );
 
 sub BoxPermutationsRounded ($nc, $n, $e) {
@@ -34,18 +38,18 @@ sub BoxPermutationsRounded ($nc, $n, $e) {
     $n.rounded-box-sized(0, 0, 3, 3, $bm);
     ++$bm;
   }
-  ok $nc.render.not,                         'Changes rendered without error';
+  render;
 }
 
 
-subtest {
+nc-subtest {
   my ($x, $y) = $n.cursor_yx;
   ok ($x, $y) ~~ (0, 0), 'Cursor is at (0, 0)'
 }, 'StdPlane position';
 
 
 my $p;
-subtest {
+nc-subtest {
   my ($rows, $cols) = Terminal::NotCurses::Main.dim_yx;
   my ($r, $c)       = $n.dim_yx;
   is ($r, $c), ($rows, $cols), 'StdPlane is the size of the terminal';
@@ -54,7 +58,7 @@ subtest {
   ok $p,                       "Created plane with dimensions ({ $rows }, { $cols })";
 }, 'StdPlane dimensions';
 
-subtest {
+nc-subtest {
   my ($rows, $cols) = Terminal::NotCurses::Main.dim_yx;
   diag $p.cursor_move_yx(0, 0);
   ok $p.move_yx(0, 0).not,                         'Can move cursor to (0, 0)';
@@ -72,7 +76,7 @@ subtest {
   is $p.cursor_yx, (0, $cols.pred),              "Cursor verified at position (0, {$cols.pred}))";
 }, 'Move StdPlane Dimensions';
 
-subtest {
+nc-subtest {
   my ($rows, $cols) = Terminal::NotCurses::Main.dim_yx;
   ok $p.cursor_move_yx(-2, 0),                        "Cursor cannot be moved to (-2, 0)";
 
@@ -87,13 +91,13 @@ subtest {
   ok $p.cursor_move_yx(0,          $cols + 1),        "Cursor cannot be moved to (0,  { $cols + 1 })";
 }, 'Move Beyond Plane Fails';
 
-subtest {
+nc-subtest {
   ok $p.set-fg-rgb8(0, 0, 0).not,                     'Can set plane fg to black';
   ok $p.set-fg-rgb8(255, 255, 255).not,               'Can set plane fg to white';
-  ok $nc.render.not,                                  'Call to render executes with no error';
+  render;
 }, 'Plane RGB';
 
-subtest {
+nc-subtest {
   nok $p.set-fg-rgb8( -1, 0, 0).not,                  'Attempting to set fg color to ( -1, 0, 0) fails.';
   nok $p.set-fg-rgb8(0, -1, 0).not,                   'Attempting to set fg color to (0, -1, 0) fails.';
   nok $p.set-fg-rgb8(0, 0, -1).not,                   'Attempting to set fg color to (0, 0, -1) fails.';
@@ -104,7 +108,7 @@ subtest {
   nok $p.set-fg-rgb8(256, 256, 256).not,              'Attempting to set fg color to (256, 256, 256) fails.';
 }, 'Reject bad RGB';
 
-subtest {
+nc-subtest {
   my $d  = $n.dim_yx;
   my $no = ncplane_options.new( |$d );
   my $nn = $p.create($no);
@@ -114,7 +118,7 @@ subtest {
   ok $nn.destroy.not,                                 'Subplane is destroyed with no errors';
 }, 'Plane child';
 
-subtest {
+nc-subtest {
   my $t = 'a';
   my $c = Terminal::NotCurses::Cell.new($t);
   ok $p.putc_yx(0, 0, $c),                             "Character '{ $t }' placed at point (0, 0)";
@@ -122,17 +126,17 @@ subtest {
   my @c = $p.cursor_yx;
   is @c.head, 0,                                       'Cursor is at row 0';
   is @c.tail, 1,                                       'Cursor was advanced to col 1';
-  ok $nc.render.not,                                   'Changes render without errors';
+  render;
   $c = Terminal::NotCurses::Cell.new;
   ok $p.putc_yx(0, 0, $c),                             'NUL character placed at point (0, 0)';
   is $p.at_yx(0, 0), '',                               "Character at point (0, 0) is NUL";
   @c = $p.cursor_yx;
   is @c.head, 0,                                       'Cursor is at row 0';
   is @c.tail, 1,                                       'Cursor was advanced to col 1';
-  ok $nc.render.not,                                   'Changes render without errors';
+  render;
 }, 'Emit NUL';
 
-subtest {
+nc-subtest {
   my $ch = '✔';
   my $c  = Terminal::NotCurses::Cell.new;
   is strlen($ch), $c.load($p, $ch),                    q<Length of cell and '✔' character are the same>;
@@ -140,19 +144,19 @@ subtest {
   my @c = $p.cursor-yx;
   is @c.head, 0,                                       'Cursor is at row 0';
   is @c.tail, 1,                                       'Cursor was advanced to col 1';
-  ok $nc.render.not,                                   'Changes rendered without error';
+  render;
 }, 'Emit Cell';
 
-subtest {
+nc-subtest {
   my $ch = '✔';
   ok $p.putwegc('✔'),                                  'Checkmark character placed on plane without error';
   my @c = $p.cursor-yx;
   is @c.head, 0,                                       'Cursor is at row 0';
   is @c.tail, 1,                                       'Cursor was advanced to col 1';
-  ok $nc.render.not,                                   'Changes rendered without error';
+  render;
 }, 'Emit Wide Char';
 
-subtest {
+nc-subtest {
   my @ss = «
     'Σιβυλλα τι θελεις;'
     ' respondebat illa:'
@@ -168,10 +172,10 @@ subtest {
   my @c = $p.cursor-yx;
   is @c.head, 2,                                                 'Cursor is at row 2';
   ok @c.tail < 10,                                               'Cursor has not advanced past the 10th column';
-  ok $nc.render.not,                                             'Changes rendered without error';
+  render;
 }, 'Emit Str';
 
-subtest {
+nc-subtest {
   my @ss = «
     'Σιβυλλα τι θελεις;'
     ' respondebat illa:'
@@ -187,20 +191,20 @@ subtest {
   my @c = $p.cursor-yx;
   is @c.head, 2,                                                 'Cursor is at row 2';
   ok @c.tail < 10,                                               'Cursor has not advanced past the 10th column';
-  ok $nc.render.not,                                             'Changes rendered without error';
+  render;
 }, 'Emit Wide Str';
 
-subtest {
+nc-subtest {
   my $s = '🍺🚬🌿💉💊🔫💣🤜🤛🐌🐎🐑🐒🐔🐗🐘🐙🐚 🐛🐜🐝🐞🐟🐠🐡🐢🐣🐤🐥🐦🐧🐨🐩🐫🐬🐭🐮';
   ok $p.set-scrolling(True).not,                                 'Plane set to allow scrolling';
   ok $p.putwstr($s),                                             'Wide str emitted properly';
   my @c = $p.cursor-yx;
   ok @c.head >= 0,                                               'Cursor is at least on row 0';
   ok @c.tail >= 1,                                               'Cursor is not beyond column 1';
-  ok $nc.render.not,                                             'Changes rendered without error';
+  render;
 }, 'Emit String of Emojis';
 
-subtest {
+nc-subtest {
   my @c = $p.dim-yx;
   ok @c.all > 0,                                                 'Both plane dimensions are greater than 0';
   my $c = Terminal::NotCurses::Cell.new;
@@ -216,10 +220,11 @@ subtest {
     #is @c.tail, $x.pred,                                         "X position is { $x.pred }";
   }
   $c.release($p);
-  ok $nc.render.not,                                             'Changes rendered successfully';
+  render;
+  $p.erase;
 }, 'Horizontal Lines';
 
-subtest {
+nc-subtest {
   my @c = $p.dim-yx;
   ok @c.all > 0,                                                 'Both plane dimensions are greater than 0';
   my $c = Terminal::NotCurses::Cell.new;
@@ -235,10 +240,11 @@ subtest {
     #is @c.tail, $x.pred,                                         "X position is { $x.pred }";
   }
   $c.release($p);
-  ok $nc.render.not,                                             'Changes rendered successfully';
+  render;
+  $p.erase;
 }, 'Vertical Lines';
 
-subtest {
+nc-subtest {
   my @c = ( my ($y, $x) = $p.dim-yx );
   ok @c.all > 2,                                                'Dimensions of plane are greater than 2';
   my $cc = $p.rounded_box_cells(0, 0);
@@ -252,15 +258,46 @@ subtest {
   is $p.box( |$cc, 2, 2, 0 ), -1,                               'Fourth box outside of plane dimensions is invalid';
   ok $p.move_yx($y - 1, $x - 2).not,                            "Cursor moved to ({ $y - 1 }, { $x - 2 }) successfully";
   is $p.box( |$cc, 2, 2, 0 ), -1,                               'Fifth box outside of plane dimensions is invalid';
-  ok $nc.render.not,                                            'Changes rendered successfully';
+  render;
+  $p.erase;
+  $p.destroy;
+  render(0);
 }, 'Invalid Box Placement';
 
 for 0 .. 3 {
-  subtest {
-    BoxPermutationsRounded($nc, $p, $_);
+  nc-subtest {
+    BoxPermutationsRounded($NC, $p, $_);
   }, "Rounded Box Permutations ({ $_ } { $_ == 1  ?? 'edge' !! 'edges' })";
 }
 
+nc-subtest {
+  my @d = $n.dim-yx;
+  ok @d.tail ~~ 2 .. 47,                           'Terminal size between 2 and 47 columns in size.';
+  my $bm = 0;
+  for ^16 {
+    ok $n.cursor-move-yx(0, $_ * 3).not,           "Cursor moved to (0, { $_ * 3}) successfully";
+    ok $n.double_box_sized(0, 0, 3, 3, $bm++).not, "Boxes rendered with mask { $bm } successfully";
+  }
+  render(2);
+  $n.erase;
+}, 'Double Box Permutations';
+
+nc-subtest {
+  my @d = $n.dim-yx;
+  ok @d.all > 2,                                     'All dimensions greater than 2';
+  ok $n.cursor-move-yx(0, 0).not,                    'Cursor moved to (0, 0) successfully';
+  ok $n.rounded-box(0, 0, |@d.map( *.pred ), 0).not, 'Rounded perimeter drawn';
+  render(2);
+  $n.erase;
+}, 'Rounded Box Perimeter';
+
+nc-subtest {
+  my @d = $n.dim-yx;
+  ok @d.all > 2,                                     'All dimensions greater than 2';
+  ok $n.cursor-move-yx(0, 0).not,                    'Cursor moved to (0, 0) successfully';
+  ok $n.double-box(0, 0, |@d.map( *.pred ), 0).not,  'Double perimeter drawn';
+  render(2);
+}, 'Double Box Perimeter';
+
+
 Terminal::NotCurses::Main.stop;
-$output.close;
-$output-file.IO.slurp( :close ).say;
